@@ -7,12 +7,14 @@ from aiogram.filters import Command, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
 
+from config.config import load_config, Config
 from lexicon.lexicon import LEXICON_RU, ORDER_DATA, GROUP_BUTTONS
 from keyboard.keyboards import create_inline_kb, split_dict, OrderCallBackData
 from FSM.FSM import FSMOrderCoffee
 
 router = Router()
 logger = logging.getLogger(__name__)
+config: Config = load_config()
 
 
 @router.message(CommandStart(),
@@ -150,19 +152,19 @@ async def send_order_to_group(bot: Bot, user_id: int, db: dict[int, dict[str, di
                                         f'Объем: {db[user_id]["current_order"]["volume"]}\n'
                                         f'Напиток: {db[user_id]["current_order"]["coffee"]}\n'
                                         f'Топпинг: {db[user_id]["current_order"]["toppings"]}\n',
-                                   chat_id=-1,
+                                   chat_id=config.group.group_id,
                                    reply_markup=create_inline_kb(GROUP_BUTTONS, 1, number_order))
             logger.info(x.message_id)
 
         case 'Орджоникидзе':
             print('прошел матч ордж')
-            x = await bot.send_message(chat_id=1,
+            x = await bot.send_message(chat_id=config.group.group_id,
                                    text=f'Заказ № {number_order}\n\n'
                                         f'Имя: {db[user_id]["current_order"]["name"]}\n'
                                         f'Объем: {db[user_id]["current_order"]["volume"]}\n'
                                         f'Напиток: {db[user_id]["current_order"]["coffee"]}\n'
                                         f'Топпинг: {db[user_id]["current_order"]["toppings"]}\n',
-                                   message_thread_id=3,
+                                   message_thread_id=config.group.thread_id,
                                    reply_markup=create_inline_kb(GROUP_BUTTONS, 1, number_order))
             logger.info(x.message_id)
 

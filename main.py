@@ -33,7 +33,6 @@ async def main() -> None:
         default=DefaultBotProperties(parse_mode=ParseMode.HTML)
     )
     dp = Dispatcher(storage=storage)
-    dp["qweqwe"] = 'start'
     dp.workflow_data.update(db=db)
     dp.include_router(user.router)
     dp.include_router(group.router)
@@ -41,7 +40,6 @@ async def main() -> None:
 
     # await set_user_menu(bot)
     await set_admin_menu(bot)
-
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
