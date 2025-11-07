@@ -6,125 +6,130 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
+from redis.asyncio import Redis
 
 from config.config import load_config, Config
 from lexicon.lexicon import LEXICON_RU, ORDER_DATA, GROUP_BUTTONS
 from keyboard.keyboards import create_inline_kb, split_dict, OrderCallBackData
 from FSM.FSM import FSMOrderCoffee
 
+
 router = Router()
 logger = logging.getLogger(__name__)
 config: Config = load_config()
 
 
-@router.message(CommandStart(),
-                F.chat.type != 'supergroup',
-                StateFilter(default_state))
-async def process_location_command(message: Message, db: dict, state: FSMContext):
-    if message.from_user.id not in db["users"]:
-        db["users"][message.from_user.id] = deepcopy(db.get("user_template"))
+@router.message(CommandStart(), F.chat.type != 'supergroup', StateFilter(default_state))
+async def process_location_command(message: Message, state: FSMContext):
+    # if message.from_user.id not in db["users"]:
+    #     db["users"][message.from_user.id] = deepcopy(db.get("user_template"))
 
-    db["users"][message.from_user.id]["order_step"] = 'location'
-    number_order = db["number_order"]
+
+    # db["users"][message.from_user.id]["order_step"] = 'location'
+    # global order_number
+    # order_number += 1
 
     logger.info(f'Пользователь: {message.from_user.username} - ID: {message.from_user.id} - начал свой заказ')
     await message.answer(text=LEXICON_RU['inline_kb_text'].get('location'),
                          reply_markup=create_inline_kb(
                              button_data=ORDER_DATA.get('location'),
-                             index=db["users"][message.from_user.id]['page'],
-                             number_order=number_order))
-
-    db["number_order"] += 1
+                             index=1,
+                             number_order=1))
+    # db["number_order"] += 1
+    await state.update_data(user_id=message.from_user.id, name=message.from_user.username)
     await state.set_state(FSMOrderCoffee.choose_volume)
+    # print(db["number_order"])
 
 
-@router.callback_query(OrderCallBackData.filter(
-    F.user_choose.in_([coffee_name for coffee_name in ORDER_DATA.get('location').keys()])),
-    StateFilter(FSMOrderCoffee.choose_volume))
-async def show_volume_menu(callback: CallbackQuery, db: dict, callback_data: OrderCallBackData, state: FSMContext):
-    db["users"][callback.from_user.id]["current_order"].get('location', 'location')
-    db["users"][callback.from_user.id]["current_order"]["location"] = ORDER_DATA["location"].get(callback_data.user_choose)
+@router.callback_query(OrderCallBackData.filter(F.user_choose.in_([coffee_name for coffee_name in ORDER_DATA.get('location').keys()])),
+                       StateFilter(FSMOrderCoffee.choose_volume))
+async def show_volume_menu(callback: CallbackQuery, callback_data: OrderCallBackData, state: FSMContext):
+    await state.update_data(location=callback_data.user_choose)
+    # db["users"][callback.from_user.id]["current_order"].get('location', 'location')
+    # db["users"][callback.from_user.id]["current_order"]["location"] = ORDER_DATA["location"].get(callback_data.user_choose)
 
-    x = await callback.answer()
+    await callback.answer()
     await callback.message.edit_text(text=LEXICON_RU['inline_kb_text'].get('volume'),
                                      reply_markup=create_inline_kb(
                                          button_data=ORDER_DATA.get('volume'),
-                                         index=db["users"][callback.from_user.id]['page'],
+                                         index=1,
                                          number_order=callback_data.number_order))
 
-    db["users"][callback.from_user.id]["order_step"] = 'volume'
+    # db["users"][callback.from_user.id]["order_step"] = 'volume'
     await state.set_state(FSMOrderCoffee.choose_coffee)
 
 
-@router.callback_query(OrderCallBackData.filter(
-    F.user_choose.in_([coffee_name for coffee_name in ORDER_DATA.get('volume').keys()])),
-    StateFilter(FSMOrderCoffee.choose_coffee))
-async def show_coffee_menu(callback: CallbackQuery, db: dict, callback_data: OrderCallBackData, state: FSMContext):
-    db["users"][callback.from_user.id]["current_order"].get('volume', 'volume')
-    db["users"][callback.from_user.id]["current_order"]["volume"] = ORDER_DATA["volume"].get(callback_data.user_choose)
+@router.callback_query(OrderCallBackData.filter(F.user_choose.in_([coffee_name for coffee_name in ORDER_DATA.get('volume').keys()])),
+                        StateFilter(FSMOrderCoffee.choose_coffee))
+async def show_coffee_menu(callback: CallbackQuery, callback_data: OrderCallBackData, state: FSMContext):
+    await state.update_data(volume=callback_data.user_choose)
+    # db["users"][callback.from_user.id]["current_order"].get('volume', 'volume')
+    # db["users"][callback.from_user.id]["current_order"]["volume"] = ORDER_DATA["volume"].get(callback_data.user_choose)
 
     await callback.answer()
     await callback.message.edit_text(text=LEXICON_RU['inline_kb_text'].get('coffee'),
                                      reply_markup=create_inline_kb(
                                          button_data=ORDER_DATA.get('coffee'),
-                                         index=db["users"][callback.from_user.id]['page'],
+                                         index=1,
                                      number_order=callback_data.number_order))
 
-    db["users"][callback.from_user.id]["order_step"] = 'coffee'
     await state.set_state(FSMOrderCoffee.choose_toppings)
 
 
 @router.callback_query(OrderCallBackData.filter(
     F.user_choose.in_([coffee_name for coffee_name in ORDER_DATA.get('coffee').keys()])),
     StateFilter(FSMOrderCoffee.choose_toppings))
-async def show_volume_menu(callback: CallbackQuery, db: dict, callback_data: OrderCallBackData, state: FSMContext):
-    db["users"][callback.from_user.id]["current_order"].get('coffee', 'coffee')
-    db["users"][callback.from_user.id]["current_order"]["coffee"] = ORDER_DATA["coffee"].get(callback_data.user_choose)
-    # Сброс паггинации
-    db["users"][callback.from_user.id]['page'] = 1
+async def show_volume_menu(callback: CallbackQuery, callback_data: OrderCallBackData, state: FSMContext):
+    await state.update_data(coffee=callback_data.user_choose)
+    # db["users"][callback.from_user.id]["current_order"].get('coffee', 'coffee')
+    # db["users"][callback.from_user.id]["current_order"]["coffee"] = ORDER_DATA["coffee"].get(callback_data.user_choose)
+    # # Сброс паггинации
+    # db["users"][callback.from_user.id]['page'] = 1
 
     await callback.answer()
     await callback.message.edit_text(text=LEXICON_RU['inline_kb_text'].get('toppings'),
                                      reply_markup=create_inline_kb(
                                          button_data=ORDER_DATA.get('toppings'),
-                                         index=db["users"][callback.from_user.id]['page'],
+                                         index=1,
                                      number_order=callback_data.number_order))
 
-    db["users"][callback.from_user.id]["order_step"] = 'toppings'
+    # db["users"][callback.from_user.id]["order_step"] = 'toppings'
     await state.set_state(FSMOrderCoffee.finish_order)
 
 
 @router.callback_query(OrderCallBackData.filter(
     F.user_choose.in_([coffee_name for coffee_name in ORDER_DATA.get('toppings').keys()])),
     StateFilter(FSMOrderCoffee.finish_order))
-async def show_volume_menu(callback: CallbackQuery, bot: Bot, db: dict, callback_data: OrderCallBackData, state: FSMContext):
-    db["users"][callback.from_user.id]["current_order"].get('toppings', 'toppings')
-    db["users"][callback.from_user.id]["current_order"]["toppings"] = ORDER_DATA["toppings"].get(callback_data.user_choose)
+async def show_volume_menu(callback: CallbackQuery, bot: Bot, callback_data: OrderCallBackData, state: FSMContext):
+    await state.update_data(toppings=callback_data.user_choose)
+    # db["users"][callback.from_user.id]["current_order"].get('toppings', 'toppings')
+    # db["users"][callback.from_user.id]["current_order"]["toppings"] = ORDER_DATA["toppings"].get(callback_data.user_choose)
 
+    current_order_data = await state.get_data()
     await callback.answer()
     await bot.send_message(chat_id=callback.from_user.id,
                            text=f'Ваш заказ будет готов на: '
-                                f'{db["users"][callback.from_user.id]["current_order"]["location"]}\n'
-                                f'Объем: {db["users"][callback.from_user.id]["current_order"]["volume"]}\n'
-                                f'Напиток: {db["users"][callback.from_user.id]["current_order"]["coffee"]}\n'
-                                f'Топпинг: {db["users"][callback.from_user.id]["current_order"]["toppings"]}\n')
+                                f'{current_order_data["location"]}\n'
+                                f'Объем: {current_order_data["volume"]}\n'
+                                f'Напиток: {current_order_data["coffee"]}\n'
+                                f'Топпинг: {current_order_data["toppings"]}\n')
 
     logger.info(f'Пользователь: '
                 f'{callback.message.chat.username} - ID: {callback.message.chat.id} - закончил свой заказ')
-    logger.info(callback.model_dump_json())
+    logger.info(callback.model_dump_json(indent=4, exclude_none=True))
 
-    db["users"][callback.from_user.id]["current_order"]["name"] = callback.message.chat.username
-    db["users"][callback.from_user.id]["current_order"]["user_id"] = callback.message.chat.id
+    # db["users"][callback.from_user.id]["current_order"]["name"] = callback.message.chat.username
+    # db["users"][callback.from_user.id]["current_order"]["user_id"] = callback.message.chat.id
 
-    db["history_order"].update({callback_data.number_order: db["users"][callback.from_user.id]["current_order"]})
+    # db["history_order"].update({callback_data.number_order: db["users"][callback.from_user.id]["current_order"]})
+    # await state.update_data(order=db["users"][callback.from_user.id]["current_order"])
 
     await bot.delete_message(chat_id=callback.from_user.id,
                              message_id=callback.message.message_id)
 
-    await send_order_to_group(bot, callback.from_user.id, db["users"], callback_data.number_order)
+    await send_order_to_group(bot, current_order_data, callback_data.number_order)
     # await state.set_state(FSMOrderCoffee.wait_order)
-    print(db)
-    print(await state.get_state())
+    print(await state.get_data())
     await state.clear()
 
 
@@ -143,15 +148,15 @@ async def show_volume_menu(callback: CallbackQuery, bot: Bot, db: dict, callback
 #                                    reply_markup=create_inline_kb(GROUP_BUTTONS, 1, number_order))
 #             logger.info(x.message_id)
 
-async def send_order_to_group(bot: Bot, user_id: int, db: dict[int, dict[str, dict]], number_order: int):
-    match db[user_id]["current_order"]["location"]:
+async def send_order_to_group(bot: Bot, db: dict[str, str], number_order: int):
+    match db["location"]:
         case '202-микр':
             print('прошел матч 202 микр')
             x = await bot.send_message(text=f'Заказ № {number_order}\n\n'
-                                        f'Имя: {db[user_id]["current_order"]["name"]}\n'
-                                        f'Объем: {db[user_id]["current_order"]["volume"]}\n'
-                                        f'Напиток: {db[user_id]["current_order"]["coffee"]}\n'
-                                        f'Топпинг: {db[user_id]["current_order"]["toppings"]}\n',
+                                        f'Имя: {db["name"]}\n'
+                                        f'Объем: {db["volume"]}\n'
+                                        f'Напиток: {db["coffee"]}\n'
+                                        f'Топпинг: {db["toppings"]}\n',
                                    chat_id=config.group.group_id,
                                    reply_markup=create_inline_kb(GROUP_BUTTONS, 1, number_order))
             logger.info(x.message_id)
@@ -160,16 +165,16 @@ async def send_order_to_group(bot: Bot, user_id: int, db: dict[int, dict[str, di
             print('прошел матч ордж')
             x = await bot.send_message(chat_id=config.group.group_id,
                                    text=f'Заказ № {number_order}\n\n'
-                                        f'Имя: {db[user_id]["current_order"]["name"]}\n'
-                                        f'Объем: {db[user_id]["current_order"]["volume"]}\n'
-                                        f'Напиток: {db[user_id]["current_order"]["coffee"]}\n'
-                                        f'Топпинг: {db[user_id]["current_order"]["toppings"]}\n',
+                                        f'Имя: {db["name"]}\n'
+                                        f'Объем: {db["volume"]}\n'
+                                        f'Напиток: {db["coffee"]}\n'
+                                        f'Топпинг: {db["toppings"]}\n',
                                    message_thread_id=config.group.thread_id,
                                    reply_markup=create_inline_kb(GROUP_BUTTONS, 1, number_order))
             logger.info(x.message_id)
 
 
-@router.callback_query(OrderCallBackData.filter(F.user_choose == 'forward'))
+@router.callback_query(OrderCallBackData.filter(F.user_choose.is_('forward')))
 async def forward_page(callback: CallbackQuery, db: dict, callback_data: OrderCallBackData):
     current_order_page = db["users"][callback.from_user.id]['order_step']
     total_pages = split_dict(ORDER_DATA.get(current_order_page), 5)
@@ -184,7 +189,7 @@ async def forward_page(callback: CallbackQuery, db: dict, callback_data: OrderCa
     await callback.answer()
 
 
-@router.callback_query(OrderCallBackData.filter(F.user_choose == 'backward'))
+@router.callback_query(OrderCallBackData.filter(F.user_choose.is_('backward')))
 async def backward_page(callback: CallbackQuery, db: dict, callback_data: OrderCallBackData):
     current_order_page = db["users"][callback.from_user.id]['order_step']
 

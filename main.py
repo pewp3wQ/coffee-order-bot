@@ -4,23 +4,29 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.fsm.storage.redis import RedisStorage
+from redis.asyncio import Redis
 
 from config.config import load_config, Config
+from middleware.inner import FirstInnerMiddleware
+from middleware.outer import FirstOuterMiddleware
 from handlers import other, user, group
 from menu.set_menu import set_user_menu, delete_command_in_chat, set_admin_menu
 
 
 async def main() -> None:
-    db = {"user_template": {"page": 1,
-                            'current_order': {},
-                            'order_step': None
-                            },
-          "users": {},
-          "number_order": 1,
-          "history_order": {}
-    }
-    storage: MemoryStorage = MemoryStorage()
+    # db = {"user_template": {"page": 1,
+    #                         'current_order': {},
+    #                         'order_step': None
+    #                         },
+    #       "users": {},
+    #       "number_order": 1,
+    #       "history_order": {}
+    # }
+
+    test_dict = {"1": "wqae", "2": "rrrrrr"}
+    redis = Redis(host='localhost')
+    storage = RedisStorage(redis=redis)
 
     config: Config = load_config()
     logging.basicConfig(
@@ -33,10 +39,13 @@ async def main() -> None:
         default=DefaultBotProperties(parse_mode=ParseMode.HTML)
     )
     dp = Dispatcher(storage=storage)
-    dp.workflow_data.update(db=db)
+    # dp.workflow_data.update()
     dp.include_router(user.router)
     dp.include_router(group.router)
     dp.include_router(other.router)
+
+    dp.update.outer_middleware(FirstOuterMiddleware())
+    dp.update.middleware(FirstInnerMiddleware())
 
     # await set_user_menu(bot)
     await set_admin_menu(bot)

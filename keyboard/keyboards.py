@@ -44,13 +44,3 @@ def create_inline_kb(button_data: dict, index: int, number_order: int) -> Inline
 
     # Возвращаем объект инлайн-клавиатуры
     return kb_builder.as_markup()
-
-
-# def create_inline_keyboard(kb_name: str) -> InlineKeyboardMarkup:
-#     inline_kb = InlineKeyboardMarkup(
-#         inline_keyboard=[
-#             [InlineKeyboardButton(text=value, callback_data=key)] for key, value in ORDER_DATA.get(kb_name).items()
-#         ]
-#     )
-#
-#     return inline_kb

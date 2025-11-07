@@ -5,3 +5,6 @@ venv/
 .redis_data
 .postgres_data
 .pgadmin_data
+__pycache__/
+test.py
+*.pycp
