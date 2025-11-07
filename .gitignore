@@ -2,3 +2,6 @@ venv/
 .venv/
 .idea/
 .env
+.redis_data
+.postgres_data
+.pgadmin_data
