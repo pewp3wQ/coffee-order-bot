@@ -6,12 +6,19 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
-from redis.asyncio import Redis
+from psycopg.connection_async import AsyncConnection
 
 from config.config import load_config, Config
 from lexicon.lexicon import LEXICON_RU, ORDER_DATA, GROUP_BUTTONS
 from keyboard.keyboards import create_inline_kb, split_dict, OrderCallBackData
 from FSM.FSM import FSMOrderCoffee
+from database.db import (
+    add_user,
+    change_user_alive_status,
+    get_user_alive_status,
+    get_order_id,
+    update_user_order
+)
 
 
 router = Router()
@@ -20,33 +27,27 @@ config: Config = load_config()
 
 
 @router.message(CommandStart(), F.chat.type != 'supergroup', StateFilter(default_state))
-async def process_location_command(message: Message, state: FSMContext):
-    # if message.from_user.id not in db["users"]:
-    #     db["users"][message.from_user.id] = deepcopy(db.get("user_template"))
-
-
-    # db["users"][message.from_user.id]["order_step"] = 'location'
-    # global order_number
-    # order_number += 1
-
+async def process_location_command(message: Message, conn: AsyncConnection, state: FSMContext):
     logger.info(f'Пользователь: {message.from_user.username} - ID: {message.from_user.id} - начал свой заказ')
+
+    await add_user(conn, user_id=message.from_user.id)
+    order_id = await get_order_id(conn, user_id=message.from_user.id)
+
     await message.answer(text=LEXICON_RU['inline_kb_text'].get('location'),
                          reply_markup=create_inline_kb(
                              button_data=ORDER_DATA.get('location'),
                              index=1,
-                             number_order=1))
-    # db["number_order"] += 1
+                             number_order=order_id))
+
     await state.update_data(user_id=message.from_user.id, name=message.from_user.username)
     await state.set_state(FSMOrderCoffee.choose_volume)
-    # print(db["number_order"])
 
 
-@router.callback_query(OrderCallBackData.filter(F.user_choose.in_([coffee_name for coffee_name in ORDER_DATA.get('location').keys()])),
-                       StateFilter(FSMOrderCoffee.choose_volume))
+@router.callback_query(OrderCallBackData.filter(
+    F.user_choose.in_([coffee_name for coffee_name in ORDER_DATA.get('location').keys()])),
+    StateFilter(FSMOrderCoffee.choose_volume))
 async def show_volume_menu(callback: CallbackQuery, callback_data: OrderCallBackData, state: FSMContext):
     await state.update_data(location=callback_data.user_choose)
-    # db["users"][callback.from_user.id]["current_order"].get('location', 'location')
-    # db["users"][callback.from_user.id]["current_order"]["location"] = ORDER_DATA["location"].get(callback_data.user_choose)
 
     await callback.answer()
     await callback.message.edit_text(text=LEXICON_RU['inline_kb_text'].get('volume'),
@@ -55,23 +56,21 @@ async def show_volume_menu(callback: CallbackQuery, callback_data: OrderCallBack
                                          index=1,
                                          number_order=callback_data.number_order))
 
-    # db["users"][callback.from_user.id]["order_step"] = 'volume'
     await state.set_state(FSMOrderCoffee.choose_coffee)
 
 
-@router.callback_query(OrderCallBackData.filter(F.user_choose.in_([coffee_name for coffee_name in ORDER_DATA.get('volume').keys()])),
-                        StateFilter(FSMOrderCoffee.choose_coffee))
+@router.callback_query(OrderCallBackData.filter(
+    F.user_choose.in_([coffee_name for coffee_name in ORDER_DATA.get('volume').keys()])),
+    StateFilter(FSMOrderCoffee.choose_coffee))
 async def show_coffee_menu(callback: CallbackQuery, callback_data: OrderCallBackData, state: FSMContext):
     await state.update_data(volume=callback_data.user_choose)
-    # db["users"][callback.from_user.id]["current_order"].get('volume', 'volume')
-    # db["users"][callback.from_user.id]["current_order"]["volume"] = ORDER_DATA["volume"].get(callback_data.user_choose)
 
     await callback.answer()
     await callback.message.edit_text(text=LEXICON_RU['inline_kb_text'].get('coffee'),
                                      reply_markup=create_inline_kb(
                                          button_data=ORDER_DATA.get('coffee'),
                                          index=1,
-                                     number_order=callback_data.number_order))
+                                         number_order=callback_data.number_order))
 
     await state.set_state(FSMOrderCoffee.choose_toppings)
 
@@ -81,29 +80,22 @@ async def show_coffee_menu(callback: CallbackQuery, callback_data: OrderCallBack
     StateFilter(FSMOrderCoffee.choose_toppings))
 async def show_volume_menu(callback: CallbackQuery, callback_data: OrderCallBackData, state: FSMContext):
     await state.update_data(coffee=callback_data.user_choose)
-    # db["users"][callback.from_user.id]["current_order"].get('coffee', 'coffee')
-    # db["users"][callback.from_user.id]["current_order"]["coffee"] = ORDER_DATA["coffee"].get(callback_data.user_choose)
-    # # Сброс паггинации
-    # db["users"][callback.from_user.id]['page'] = 1
 
     await callback.answer()
     await callback.message.edit_text(text=LEXICON_RU['inline_kb_text'].get('toppings'),
                                      reply_markup=create_inline_kb(
                                          button_data=ORDER_DATA.get('toppings'),
                                          index=1,
-                                     number_order=callback_data.number_order))
+                                         number_order=callback_data.number_order))
 
-    # db["users"][callback.from_user.id]["order_step"] = 'toppings'
     await state.set_state(FSMOrderCoffee.finish_order)
 
 
 @router.callback_query(OrderCallBackData.filter(
     F.user_choose.in_([coffee_name for coffee_name in ORDER_DATA.get('toppings').keys()])),
     StateFilter(FSMOrderCoffee.finish_order))
-async def show_volume_menu(callback: CallbackQuery, bot: Bot, callback_data: OrderCallBackData, state: FSMContext):
+async def show_volume_menu(callback: CallbackQuery, bot: Bot, conn: AsyncConnection, callback_data: OrderCallBackData, state: FSMContext):
     await state.update_data(toppings=callback_data.user_choose)
-    # db["users"][callback.from_user.id]["current_order"].get('toppings', 'toppings')
-    # db["users"][callback.from_user.id]["current_order"]["toppings"] = ORDER_DATA["toppings"].get(callback_data.user_choose)
 
     current_order_data = await state.get_data()
     await callback.answer()
@@ -114,21 +106,23 @@ async def show_volume_menu(callback: CallbackQuery, bot: Bot, callback_data: Ord
                                 f'Напиток: {current_order_data["coffee"]}\n'
                                 f'Топпинг: {current_order_data["toppings"]}\n')
 
+
     logger.info(f'Пользователь: '
                 f'{callback.message.chat.username} - ID: {callback.message.chat.id} - закончил свой заказ')
     logger.info(callback.model_dump_json(indent=4, exclude_none=True))
 
-    # db["users"][callback.from_user.id]["current_order"]["name"] = callback.message.chat.username
-    # db["users"][callback.from_user.id]["current_order"]["user_id"] = callback.message.chat.id
-
-    # db["history_order"].update({callback_data.number_order: db["users"][callback.from_user.id]["current_order"]})
-    # await state.update_data(order=db["users"][callback.from_user.id]["current_order"])
+    await update_user_order(conn,
+                            order_id=callback_data.number_order,
+                            location=current_order_data["location"],
+                            volume=current_order_data["volume"],
+                            coffee=current_order_data["coffee"],
+                            toppings=current_order_data["toppings"]
+    )
 
     await bot.delete_message(chat_id=callback.from_user.id,
                              message_id=callback.message.message_id)
 
     await send_order_to_group(bot, current_order_data, callback_data.number_order)
-    # await state.set_state(FSMOrderCoffee.wait_order)
     print(await state.get_data())
     await state.clear()
 

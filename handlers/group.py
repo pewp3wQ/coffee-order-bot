@@ -2,27 +2,25 @@ import logging
 
 from aiogram import Router, F, Bot
 from aiogram.types import CallbackQuery
-from keyboard.keyboards import OrderCallBackData
-from aiogram.filters import StateFilter
-from aiogram.fsm.context import FSMContext
-from FSM.FSM import FSMOrderCoffee
+from psycopg.connection_async import AsyncConnection
 
+from keyboard.keyboards import OrderCallBackData
+from database.db import get_user_from_order
 
 router = Router()
 logger = logging.getLogger(__name__)
 
 
-@router.callback_query(OrderCallBackData.filter(F.user_choose == 'queue'))
-async def took_order(callback: CallbackQuery, bot: Bot, db: dict, callback_data: OrderCallBackData):
+@router.callback_query(OrderCallBackData.filter(F.user_choose=="queue"))
+async def took_order(callback: CallbackQuery, bot: Bot, conn: AsyncConnection, callback_data: OrderCallBackData):
     logger.info('Прошел в хендлер взятия заказа')
 
     await callback.answer()
-    user_id = db["history_order"][callback_data.number_order].get("user_id")
-    await bot.send_message(chat_id=user_id,
+    await bot.send_message(chat_id=1,
                            text='Заказ взять в работу')
 
 
-@router.callback_query(OrderCallBackData.filter(F.user_choose == 'ready'))
+@router.callback_query(OrderCallBackData.filter(F.user_choose=='ready'))
 async def took_order(callback: CallbackQuery, bot: Bot, db: dict, callback_data: OrderCallBackData):
     logger.info('Прошел в хендлер готовоность заказа')
 

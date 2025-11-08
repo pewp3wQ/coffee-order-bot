@@ -1,5 +1,10 @@
+import logging
+import os
 from dataclasses import dataclass
+
 from environs import Env
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -20,20 +25,79 @@ class GroupData:
 
 
 @dataclass
+class DatabaseSettings:
+    name: str
+    host: str
+    port: int
+    user: str
+    password: str
+
+
+@dataclass
+class RedisSettings:
+    host: str
+    port: int
+    db: int
+    password: str
+    username: str
+
+
+@dataclass
 class Config:
     bot: TgBot
     log: LogSettings
     group: GroupData
-
-
+    db: DatabaseSettings
+    redis: RedisSettings
 
 
 
 def load_config(path: str | None = None) -> Config:
     env = Env()
+
+    if path:
+        if not os.path.exists(path):
+            logger.warning(".env file not found at '%s', skipping...", path)
+        else:
+            logger.info("Loading .env from '%s'", path)
     env.read_env(path)
+    token = env("BOT_TOKEN")
+
+    if not token:
+        raise ValueError("BOT_TOKEN must not be empty")
+
+    db = DatabaseSettings(
+        name=env("POSTGRES_DB"),
+        host=env("POSTGRES_HOST"),
+        port=env.int("POSTGRES_PORT"),
+        user=env("POSTGRES_USER"),
+        password=env("POSTGRES_PASSWORD"),
+    )
+
+    redis = RedisSettings(
+        host=env("REDIS_HOST"),
+        port=env.int("REDIS_PORT"),
+        db=env.int("REDIS_DATABASE"),
+        password=env("REDIS_PASSWORD", default=""),
+        username=env("REDIS_USERNAME", default=""),
+    )
+
+    logg_settings = LogSettings(
+        level=env("LOG_LEVEL"),
+        format=env("LOG_FORMAT")
+    )
+
+    group_data = GroupData(
+        group_id=env('GROUP_ID'),
+        thread_id=env('THREAD_ID')
+    )
+
+    logger.info("Configuration loaded successfully")
+
     return Config(
-        bot=TgBot(token=env('BOT_TOKEN')),
-        log=LogSettings(level=env('LOG_LEVEL'), format=env('LOG_FORMAT')),
-        group=GroupData(group_id=env('GROUP_ID'), thread_id=env('THREAD_ID'))
+        bot=TgBot(token=token),
+        db=db,
+        redis=redis,
+        log=logg_settings,
+        group=group_data
     )
