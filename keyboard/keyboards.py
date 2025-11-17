@@ -42,5 +42,4 @@ def create_inline_kb(button_data: dict, index: int, number_order: int) -> Inline
 
         kb_builder.row(*[backward, pagination, forward], width=3)
 
-    # Возвращаем объект инлайн-клавиатуры
     return kb_builder.as_markup()

@@ -1,6 +1,6 @@
 import asyncio
 import logging
-import psycopg_pool
+from psycopg_pool import AsyncConnectionPool
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -11,7 +11,7 @@ from redis.asyncio import Redis
 from config.config import load_config, Config
 from middleware.database import DataBaseMiddleware
 from handlers import other, user, group
-from menu.set_menu import set_user_menu, delete_command_in_chat, set_admin_menu
+from menu.set_menu import set_user_menu, delete_command_in_chat, set_admin_menu, set_description
 from database.connection import get_pg_pool
 
 
@@ -42,7 +42,7 @@ async def main() -> None:
     dp = Dispatcher(storage=storage)
 
     logger.info('Get db pool')
-    db_pool: psycopg_pool.AsyncConnectionPool = await get_pg_pool(
+    db_pool: AsyncConnectionPool = await get_pg_pool(
         db_name=config.db.name,
         host=config.db.host,
         port=config.db.port,
@@ -60,6 +60,7 @@ async def main() -> None:
 
     # await set_user_menu(bot)
     await set_admin_menu(bot)
+    await set_description(bot)
 
     try:
         await bot.delete_webhook(drop_pending_updates=True)

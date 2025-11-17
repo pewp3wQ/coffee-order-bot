@@ -27,8 +27,8 @@ class DataBaseMiddleware(BaseMiddleware):
                     data["conn"] = connection
                     result = await handler(event, data)
 
-                logger.info('Внутри connection мидлвари database')
-                logger.info(f'{result}')
+                    logger.info('Внутри connection мидлвари database')
+                    logger.info(f'{result}')
 
             except Exception as e:
                 logger.exception("Transaction rolled back due to error: %s", e)

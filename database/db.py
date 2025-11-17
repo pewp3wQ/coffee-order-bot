@@ -16,7 +16,7 @@ async def add_user(
     async with conn.cursor() as cursor:
         await cursor.execute(
             query="""
-                INSERT INTO users(user_id, username, is_alive)
+                INSERT INTO users(user_id, is_alive)
                 VALUES(
                     %(user_id)s, 
                     %(is_alive)s
@@ -112,7 +112,9 @@ async def get_order_id(
                 )
                 RETURNING id;
             """,
-            params=(user_id,),
+            params={
+                "user_id": user_id
+            },
         )
         row = await order_id.fetchone()
         return row[0] if row else None
@@ -123,25 +125,44 @@ async def update_user_order(
         *,
         order_id: int,
         location: str,
-        volume: str,
+        category: str,
         coffee: str,
+        volume: str,
+        coffee_base: str,
+        sugar: str,
         toppings: str,
+        additional: str,
+        price: int,
         ) -> None:
     async with conn.cursor() as cursor:
         await cursor.execute(
             query="""
-                UPDATE orders,
+                UPDATE orders
                 SET location = %s,
-                    volume = %s,
+                    category = %s,
                     coffee = %s,
+                    volume = %s,
+                    coffee_base = %s,
+                    sugar = %s,
                     toppings = %s,
+                    additional = %s,
+                    price = %s,
                     status = 'confirmed',
                     confirmed_at = NOW()
                 WHERE id = %s;
             """,
-            params=(location, volume, coffee, toppings, order_id)
+            params=(location,
+                    category,
+                    coffee,
+                    volume,
+                    coffee_base,
+                    sugar,
+                    toppings,
+                    additional,
+                    price,
+                    order_id)
         )
-    logger.info("Updated `order` for ID: %d", order_id)
+    logger.info("Данные по заказу -- %d -- обновлены", order_id)
 
 
 async def get_user_from_order(
@@ -162,3 +183,62 @@ async def get_user_from_order(
     else:
         logger.warning("No user with %s", order_id)
     return row[0] if row else None
+
+
+async def add_price(
+        conn: AsyncConnection,
+        *,
+        product_name: str,
+        category: str,
+        volume: str,
+        price: int
+) -> None:
+    async with conn.cursor() as cursor:
+        await cursor.execute(
+            query="""
+                INSERT INTO prices (product_name, category, volume, price)
+                VALUES (
+                    %(product_name)s,
+                    %(category)s,
+                    %(volume)s,
+                    %(price)s
+                );    
+            """,
+            params={
+                "product_name": product_name,
+                "category": category,
+                "volume": volume,
+                "price": price
+            },
+        )
+
+async def get_price(
+        conn: AsyncConnection,
+        *,
+        product_name: str,
+        category: str,
+        volume: str | None = None
+) -> int | None:
+    async with conn.cursor() as cursor:
+        coffee_price = await cursor.execute(
+            query="""
+                SELECT price
+                FROM prices
+                WHERE
+                    product_name = %(product_name)s AND 
+                    category = %(category)s AND
+                    (volume = %(volume)s OR %(volume)s IS NULL);
+            """,
+            params={
+                "product_name": product_name,
+                "category": category,
+                "volume": volume
+            }
+        )
+
+        row = await coffee_price.fetchone()
+        if row:
+            logger.info("Price for %s = %s", product_name, row[0])
+        else:
+            logger.warning("No price for %s, %s", product_name, volume)
+        return row[0] if row else None
