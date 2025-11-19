@@ -4,8 +4,11 @@ from typing import Any, Awaitable, Callable
 from aiogram import BaseMiddleware
 from aiogram.types import Update
 from psycopg_pool import AsyncConnectionPool
+from config.config import load_config
+from database.connection import get_pg_pool
 
 logger = logging.getLogger(__name__)
+config = load_config()
 
 
 class DataBaseMiddleware(BaseMiddleware):
@@ -15,7 +18,14 @@ class DataBaseMiddleware(BaseMiddleware):
             event: Update,
             data: dict[str, Any],
     ) -> Any:
-        db_pool: AsyncConnectionPool = data.get("db_pool")
+        logger.info('Get db pool')
+        db_pool: AsyncConnectionPool = await get_pg_pool(
+            db_name=config.db.name,
+            host=config.db.host,
+            port=config.db.port,
+            user=config.db.user,
+            password=config.db.password,
+        )
 
         if db_pool is None:
             logger.error("Database pool is not provided in middleware data.")

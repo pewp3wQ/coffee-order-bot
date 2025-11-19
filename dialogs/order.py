@@ -18,38 +18,17 @@ from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.kbd import Button, Column, ScrollingGroup, Select
 
 from config.config import Config, load_config
-from middleware.database import DataBaseMiddleware
-from handlers.group import group_router
+from middleware.db_connection import DataBaseMiddleware
 from lexicon.lexicon import LEXICON_RU, ORDER_DATA
-from database.connection import get_pg_pool
+from FSM.FSM import OrderSG
 from database.db import (
-    add_user,
-    change_user_alive_status,
-    get_user_alive_status,
-    get_order_id,
     update_user_order,
-    add_price,
     get_price
 )
 
 router = Router()
 
 logger = logging.getLogger(__name__)
-
-class StartSG(StatesGroup):
-    start = State()
-
-
-class OrderSG(StatesGroup):
-    set_category = State()
-    set_location = State()
-    set_volume = State()
-    set_coffee = State()
-    set_coffee_base = State()
-    set_sugar = State()
-    set_toppings = State()
-    set_additional = State()
-    set_finish = State()
 
 
 async def location_callback_click(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
@@ -175,21 +154,6 @@ async def back_button_click(callback: CallbackQuery, button: Button, dialog_mana
     await dialog_manager.back()
 
 
-async def start_order_dialog(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
-    logger.info(f'Пользователь: {callback.from_user.username} - ID: {callback.from_user.id} - начал свой заказ')
-
-    conn = dialog_manager.middleware_data['conn']
-    await add_user(conn, user_id=callback.from_user.id)
-    order_id = await get_order_id(conn, user_id=callback.from_user.id)
-
-    await dialog_manager.start(state=OrderSG.set_location, data={'order_id': order_id})
-
-
-# Это геттер
-async def get_username(event_from_user: User, **kwargs):
-    return {'username': event_from_user.username if event_from_user.username is not None else event_from_user.full_name}
-
-
 async def get_volume_menu(aiogd_context: Context,**kwargs):
     data = aiogd_context.dialog_data
 
@@ -222,17 +186,6 @@ async def get_additional_menu(**kwargs):
     items = [(key, value) for key, value in ORDER_DATA.get("additional").items()]
     return {"additional": items}
 
-
-main_menu_dialog = Dialog(
-    Window(
-        Format(text='Привет, <b>{username}</b>!\n'),
-        Const(
-            text=LEXICON_RU.get('/start')),
-        Button(text=Const('Сделать заказ'), id='get_order', on_click=start_order_dialog),
-        getter=get_username,
-        state=StartSG.start,
-    ),
-)
 
 order_dialog = Dialog(
     Window(
@@ -370,77 +323,7 @@ order_dialog = Dialog(
         state=OrderSG.set_finish)
 )
 
-@router.message(CommandStart())
-async def command_start_process(message: Message, dialog_manager: DialogManager):
-    await dialog_manager.start(state=StartSG.start, mode=StartMode.RESET_STACK)
-
 
 @router.message()
 async def delete_input_messages(message: Message, bot: Bot):
     await bot.delete_message(chat_id=message.from_user.id, message_id=message.message_id)
-
-
-async def main() -> None:
-    config: Config = load_config()
-
-    storage = RedisStorage(
-        redis=Redis(
-            host=config.redis.host,
-            port=config.redis.port,
-            db=config.redis.db,
-            password=config.redis.password,
-            username=config.redis.username,
-        )
-    )
-
-    logging.basicConfig(
-        level=logging.getLevelName(level=config.log.level),
-        format=config.log.format
-    )
-
-    config: Config = load_config()
-
-    logging.basicConfig(
-        level=logging.getLevelName(level=config.log.level),
-        format=config.log.format
-    )
-
-    logger = logging.getLogger(__name__)
-
-    bot = Bot(
-        token=config.bot.token,
-        default=DefaultBotProperties(parse_mode=ParseMode.HTML)
-    )
-    dp = Dispatcher()
-
-    logger.info('Get db pool')
-    db_pool: AsyncConnectionPool = await get_pg_pool(
-        db_name=config.db.name,
-        host=config.db.host,
-        port=config.db.port,
-        user=config.db.user,
-        password=config.db.password,
-    )
-
-    logger.info('Router including')
-    dp.include_router(router)
-    dp.include_router(main_menu_dialog)
-    dp.include_router(order_dialog)
-    dp.include_router(group_router)
-    setup_dialogs(dp)
-
-    logger.info("Including middlewares...")
-    dp.update.middleware(DataBaseMiddleware())
-
-    try:
-        await dp.start_polling(bot, db_pool=db_pool)
-    except Exception as e:
-        logger.exception(e)
-    finally:
-        await db_pool.close()
-        logger.info("Connection to Postgres closed")
-
-
-if __name__ == '__main__':
-    asyncio.run(main())
-

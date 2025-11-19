@@ -1,12 +1,17 @@
 from aiogram.fsm.state import State, StatesGroup
 
 
-class FSMOrderCoffee(StatesGroup):
-    choose_volume = State()
-    choose_coffee = State()
-    choose_toppings = State()
-    rotate_coffee = State()
-    choose_milks = State()
-    choose_additional = State()
-    finish_order = State()
-    wait_order = State()
+class StartSG(StatesGroup):
+    start = State()
+
+
+class OrderSG(StatesGroup):
+    set_category = State()
+    set_location = State()
+    set_volume = State()
+    set_coffee = State()
+    set_coffee_base = State()
+    set_sugar = State()
+    set_toppings = State()
+    set_additional = State()
+    set_finish = State()

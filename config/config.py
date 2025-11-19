@@ -41,6 +41,14 @@ class RedisSettings:
     password: str
     username: str
 
+@dataclass
+class WebhookSettings:
+    base_url: str
+    secret: str
+    path: str
+    server: str
+    port: int
+
 
 @dataclass
 class Config:
@@ -49,6 +57,7 @@ class Config:
     group: GroupData
     db: DatabaseSettings
     redis: RedisSettings
+    webhook: WebhookSettings
 
 
 
@@ -92,6 +101,14 @@ def load_config(path: str | None = None) -> Config:
         thread_id=env('THREAD_ID')
     )
 
+    webhook = WebhookSettings(
+        base_url=env('BASE_WEBHOOK_URL'),
+        secret=env('WEBHOOK_SECRET'),
+        path=env('WEBHOOK_PATH'),
+        server=env('WEB_SERVER_HOST'),
+        port=env('WEB_SERVER_PORT')
+    )
+
     logger.info("Configuration loaded successfully")
 
     return Config(
@@ -99,5 +116,6 @@ def load_config(path: str | None = None) -> Config:
         db=db,
         redis=redis,
         log=logg_settings,
-        group=group_data
+        group=group_data,
+        webhook=webhook
     )
