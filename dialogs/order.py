@@ -1,24 +1,14 @@
-import asyncio
 import logging
 from typing import Any
-from psycopg_pool import AsyncConnectionPool
 from psycopg.connection_async import AsyncConnection
 
-from aiogram import Bot, Dispatcher, Router, F
-from aiogram.client.default import DefaultBotProperties
-from aiogram.enums import ParseMode
-from aiogram.filters import CommandStart
-from aiogram.fsm.state import State, StatesGroup
-from aiogram.fsm.storage.redis import RedisStorage
-from redis.asyncio import Redis
+from aiogram import Bot, Router
 from aiogram.types import CallbackQuery, Message, User, InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram_dialog import Dialog, DialogManager, StartMode, Window, setup_dialogs
+from aiogram_dialog import Dialog, DialogManager, Window
 from aiogram_dialog.api.entities import Context
 from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.kbd import Button, Column, ScrollingGroup, Select
 
-from config.config import Config, load_config
-from middleware.db_connection import DataBaseMiddleware
 from lexicon.lexicon import LEXICON_RU, ORDER_DATA
 from FSM.FSM import OrderSG
 from database.db import (
