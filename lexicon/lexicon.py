@@ -232,14 +232,14 @@ ORDER_DATA: dict[str, dict] = {
           "matcha_latte": "Матча латте"
         },
 
-        "cream_coffee": {
+        "cream": {
           "raf_vanilla": "Раф ваниль",
           "raf_nut": "Раф орех",
           "raf_citrus": "Раф цитрус",
           "raf_coconut": "Раф кокос"
         },
 
-        "signature_coffee": {
+        "signature": {
           "latte_nut": "Латте орех",
           "latte_halva": "Латте халва",
           "latte_peanut": "Латте арахис",
