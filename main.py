@@ -32,7 +32,7 @@ async def on_startup(bot: Bot) -> None:
     await set_description(bot)
 
     logger.info('Вебхук установлен')
-    # await bot.set_webhook(f"{config.webhook.base_url}{config.webhook.path}", secret_token=config.webhook.secret)
+    await bot.set_webhook(f"{config.webhook.base_url}{config.webhook.path}", secret_token=config.webhook.secret)
 
 
 
