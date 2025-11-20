@@ -45,7 +45,7 @@ async def create_pool(app: web.Application):
         )
     return db_pool
 
-async def main():
+def main():
     storage = RedisStorage(
         redis=Redis(
             host=config.redis.host,
@@ -62,14 +62,6 @@ async def main():
         default=DefaultBotProperties(parse_mode=ParseMode.HTML)
     )
     dp = Dispatcher(storage=storage)
-
-    db_pool: psycopg_pool.AsyncConnectionPool = await get_pg_pool(
-        db_name=config.db.name,
-        host=config.db.host,
-        port=config.db.port,
-        user=config.db.user,
-        password=config.db.password,
-    )
 
     # await bot.delete_webhook()
     dp.startup.register(on_startup)
@@ -91,13 +83,12 @@ async def main():
     webhook_requests_handler = SimpleRequestHandler(
         dispatcher=dp,
         bot=bot,
-        secret_token=config.webhook.secret,
-        dp_pool=db_pool
+        secret_token=config.webhook.secret
     )
     webhook_requests_handler.register(app, path=config.webhook.path)
     setup_application(app, dp, bot=bot)
 
-    return app
+    web.run_app(app, host=config.webhook.server, port=int(config.webhook.port))
 
 
 if __name__ == '__main__':
@@ -105,4 +96,4 @@ if __name__ == '__main__':
         level=logging.getLevelName(level=config.log.level),
         format=config.log.format
     )
-    web.run_app(main(), host=config.webhook.server, port=int(config.webhook.port))
+    main()

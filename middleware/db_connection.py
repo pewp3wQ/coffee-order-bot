@@ -19,7 +19,14 @@ class DataBaseMiddleware(BaseMiddleware):
             data: dict[str, Any],
     ) -> Any:
         logger.info('Get db pool')
-        db_pool: AsyncConnectionPool = data.get("db_pool")
+        db_pool: AsyncConnectionPool = await get_pg_pool(
+            db_name=config.db.name,
+            host=config.db.host,
+            port=config.db.port,
+            user=config.db.user,
+            password=config.db.password,
+        )
+        # db_pool: AsyncConnectionPool = data.get("db_pool")
 
         if db_pool is None:
             logger.error("Database pool is not provided in middleware data.")
