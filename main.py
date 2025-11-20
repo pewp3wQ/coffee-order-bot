@@ -21,7 +21,6 @@ from menu.set_menu import set_user_menu, set_description
 
 config: Config = load_config()
 logger = logging.getLogger(__name__)
-app = web.Application()
 
 
 async def on_startup(bot: Bot) -> None:
@@ -46,7 +45,7 @@ async def create_pool(app: web.Application):
         )
     return db_pool
 
-async def main() -> None:
+async def main():
     storage = RedisStorage(
         redis=Redis(
             host=config.redis.host,
@@ -87,7 +86,7 @@ async def main() -> None:
     dp.update.middleware(DataBaseMiddleware())
 
     # await dp.start_polling(bot)
-
+    app = web.Application()
     # app.on_startup.append(create_pool)
     webhook_requests_handler = SimpleRequestHandler(
         dispatcher=dp,
@@ -98,10 +97,12 @@ async def main() -> None:
     webhook_requests_handler.register(app, path=config.webhook.path)
     setup_application(app, dp, bot=bot)
 
+    return app
+
 
 if __name__ == '__main__':
     logging.basicConfig(
         level=logging.getLevelName(level=config.log.level),
         format=config.log.format
     )
-    web.run_app(app, host=config.webhook.server, port=int(config.webhook.port))
+    web.run_app(main(), host=config.webhook.server, port=int(config.webhook.port))
