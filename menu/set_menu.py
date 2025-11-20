@@ -9,7 +9,7 @@ from lexicon.lexicon import LEXICON_RU
 
 async def set_user_menu(bot: Bot):
     bot_command_for_user = [
-        BotCommand(command='/start', description=''),
+        BotCommand(command='/start', description='Вызвать главное меню'),
     ]
 
     await bot.set_my_commands(

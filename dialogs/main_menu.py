@@ -2,7 +2,7 @@ import logging
 
 from aiogram import Router
 from aiogram.filters import CommandStart
-from aiogram.types import User, CallbackQuery, Message
+from aiogram.types import User, CallbackQuery, Message, Chat
 from aiogram_dialog import Dialog, DialogManager, StartMode, Window
 from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.kbd import Button
@@ -42,6 +42,6 @@ main_menu_dialog = Dialog(
     ),
 )
 
-@router.message(CommandStart())
+@router.message(CommandStart(), )
 async def command_start_process(message: Message, dialog_manager: DialogManager):
     await dialog_manager.start(state=StartSG.start, mode=StartMode.RESET_STACK)

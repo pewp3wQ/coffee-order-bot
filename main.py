@@ -8,7 +8,7 @@ from aiohttp import web
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from aiogram.fsm.storage.redis import RedisStorage
+from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
 from redis.asyncio import Redis
 
 from config.config import load_config, Config
@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 async def on_startup(bot: Bot) -> None:
     logger.info('Установлено меню и описание бота')
+    await bot.delete_my_commands()
     await set_user_menu(bot)
     # await set_admin_menu(bot)
     await set_description(bot)
@@ -39,16 +40,17 @@ async def main() -> None:
             db=config.redis.db,
             password=config.redis.password,
             username=config.redis.username,
-        )
+        ),
+        key_builder=DefaultKeyBuilder(with_destiny=True)
     )
 
     bot = Bot(
         token=config.bot.token,
         default=DefaultBotProperties(parse_mode=ParseMode.HTML)
     )
-    dp = Dispatcher()
+    dp = Dispatcher(storage=storage)
     await bot.delete_webhook()
-    # dp.startup.register(on_startup)
+    dp.startup.register(on_startup)
 
     logger.info('Router including')
     dp.include_router(main_menu.router)

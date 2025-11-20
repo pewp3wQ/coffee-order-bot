@@ -1,7 +1,7 @@
 import logging
 
 from aiogram import Router, F, Bot
-from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 from psycopg.connection_async import AsyncConnection
 
 from database.db import get_user_from_order
