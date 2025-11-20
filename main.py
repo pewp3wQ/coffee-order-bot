@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-import psycopg_pool
+from psycopg_pool import AsyncConnectionPool
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from aiogram_dialog import setup_dialogs
 from aiohttp import web
@@ -63,6 +63,15 @@ async def main():
     )
     dp = Dispatcher(storage=storage)
 
+    db_pool: AsyncConnectionPool = await get_pg_pool(
+        db_name=config.db.name,
+        host=config.db.host,
+        port=config.db.port,
+        user=config.db.user,
+        password=config.db.password,
+    )
+
+    dp["db_pool"] = db_pool
     # await bot.delete_webhook()
     dp.startup.register(on_startup)
 
@@ -87,7 +96,6 @@ async def main():
     )
     webhook_requests_handler.register(app, path=config.webhook.path)
     setup_application(app, dp, bot=bot)
-
     return app
 
 
