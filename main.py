@@ -45,7 +45,7 @@ async def create_pool(app: web.Application):
         )
     return db_pool
 
-def main():
+async def main():
     storage = RedisStorage(
         redis=Redis(
             host=config.redis.host,
