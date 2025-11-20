@@ -88,7 +88,7 @@ def main():
     webhook_requests_handler.register(app, path=config.webhook.path)
     setup_application(app, dp, bot=bot)
 
-    web.run_app(app, host=config.webhook.server, port=int(config.webhook.port))
+    return app
 
 
 if __name__ == '__main__':
@@ -96,4 +96,4 @@ if __name__ == '__main__':
         level=logging.getLevelName(level=config.log.level),
         format=config.log.format
     )
-    main()
+    web.run_app(main(), host=config.webhook.server, port=int(config.webhook.port))
