@@ -21,8 +21,8 @@ LEXICON_RU: dict[str, str | dict] = {
 ORDER_DATA: dict[str, dict] = {
     'category': {
         'classic': 'Классическое кофе',
-        'cream_coffee': 'Кофе на основе сликов',
-        'signature_coffee': 'Авторское кофе',
+        'cream': 'Кофе на основе сликов',
+        'signature': 'Авторское кофе',
         'cold': 'Колд'
     },
     'location': {
