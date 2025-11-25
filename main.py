@@ -33,7 +33,12 @@ async def on_startup(bot: Bot) -> None:
     logger.info('Вебхук установлен')
     await bot.set_webhook(f"{config.webhook.base_url}{config.webhook.path}", secret_token=config.webhook.secret)
 
-
+async def on_shutdown(dispatcher: Dispatcher, bot: Bot):
+    # Закрываем пул БД
+    # Закрываем бот
+    db_pool = dispatcher.get("db_pool")
+    await db_pool.close()
+    await bot.session.close()
 
 async def create_pool(app: web.Application):
     db_pool = await get_pg_pool(
@@ -74,7 +79,7 @@ async def main():
     dp["db_pool"] = db_pool
     # await bot.delete_webhook()
     dp.startup.register(on_startup)
-
+    dp.shutdown.register(on_shutdown)
     logger.info('Router including')
     dp.include_router(main_menu.router)
     dp.include_router(main_menu.main_menu_dialog)

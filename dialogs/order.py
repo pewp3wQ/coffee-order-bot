@@ -181,13 +181,13 @@ order_dialog = Dialog(
     Window(
         Const(text=LEXICON_RU['inline_kb_text']['location']),
         Column(*[Button(text=Format(value), id=key, on_click=location_callback_click) for key, value in ORDER_DATA['location'].items()]),
-        Button(text=Const('Назад'), id='location_back', on_click=back_button_click),
         state=OrderSG.set_location),
 
     Window(
         Const(text=LEXICON_RU['inline_kb_text']['category']),
         Column(*[Button(text=Format(value), id=key, on_click=drink_category) for key, value in
                  ORDER_DATA['category'].items()]),
+        Button(text=Const('Назад'), id='category_back', on_click=back_button_click),
         state=OrderSG.set_category
     ),
 
