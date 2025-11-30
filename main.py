@@ -13,6 +13,7 @@ from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
 from redis.asyncio import Redis
 
 from config.config import load_config, Config
+from log_settings import log_config
 from database.connection import get_pg_pool
 from dialogs import main_menu, order
 from middleware.db_connection import DataBaseMiddleware
@@ -104,9 +105,10 @@ async def main():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(
-        level=logging.getLevelName(level=config.log.level),
-        format=config.log.format
-    )
+    log_config.setup_logging()
+    # logging.basicConfig(
+    #     level=logging.getLevelName(level=config.log.level),
+    #     format=config.log.format
+    # )
     web.run_app(main(), host=config.webhook.server, port=int(config.webhook.port))
     # asyncio.run(main())
