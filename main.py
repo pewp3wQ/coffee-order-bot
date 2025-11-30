@@ -52,6 +52,8 @@ async def create_pool(app: web.Application):
     return db_pool
 
 async def main():
+    log_config.setup_logging()
+
     storage = RedisStorage(
         redis=Redis(
             host=config.redis.host,
@@ -105,7 +107,6 @@ async def main():
 
 
 if __name__ == '__main__':
-    log_config.setup_logging()
     # logging.basicConfig(
     #     level=logging.getLevelName(level=config.log.level),
     #     format=config.log.format
