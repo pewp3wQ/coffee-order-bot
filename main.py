@@ -101,6 +101,7 @@ async def main():
     # webhook_requests_handler.register(app, path=config.webhook.path)
     # setup_application(app, dp, bot=bot)
     # return app
+    # asd
 
 
 if __name__ == '__main__':
