@@ -91,7 +91,7 @@ async def main():
     logger.info("Including middlewares...")
     dp.update.middleware(DataBaseMiddleware())
 
-    await dp.start_polling(bot)
+    # await dp.start_polling(bot)
     app = web.Application()
     webhook_requests_handler = SimpleRequestHandler(
         dispatcher=dp,
@@ -109,4 +109,4 @@ if __name__ == '__main__':
         format=config.log.format
     )
     web.run_app(main(), host=config.webhook.server, port=int(config.webhook.port))
-    asyncio.run(main())
+    # asyncio.run(main())
