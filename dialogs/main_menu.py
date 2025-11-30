@@ -8,7 +8,6 @@ from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.kbd import Button
 from datetime import time, timezone, timedelta
 
-from filters.my_filters import StartTime
 from lexicon.lexicon import LEXICON_RU
 from FSM.FSM import StartSG, OrderSG
 from database.db import (
