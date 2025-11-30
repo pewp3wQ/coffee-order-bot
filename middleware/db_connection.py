@@ -5,7 +5,6 @@ from aiogram import BaseMiddleware
 from aiogram.types import Update
 from psycopg_pool import AsyncConnectionPool
 from config.config import load_config
-from database.connection import get_pg_pool
 
 logger = logging.getLogger(__name__)
 config = load_config()
@@ -19,13 +18,6 @@ class DataBaseMiddleware(BaseMiddleware):
             data: dict[str, Any],
     ) -> Any:
         logger.info('Get db pool')
-        # db_pool: AsyncConnectionPool = await get_pg_pool(
-        #     db_name=config.db.name,
-        #     host=config.db.host,
-        #     port=config.db.port,
-        #     user=config.db.user,
-        #     password=config.db.password,
-        # )
         db_pool: AsyncConnectionPool = data.get("db_pool")
 
         if db_pool is None:
@@ -37,15 +29,8 @@ class DataBaseMiddleware(BaseMiddleware):
                 async with connection.transaction():
                     data["conn"] = connection
                     result = await handler(event, data)
-
-                    logger.info('Внутри connection мидлвари database')
-                    logger.info(f'{result}')
-
             except Exception as e:
                 logger.exception("Transaction rolled back due to error: %s", e)
                 raise
-
-        logger.info(f'Прошел мидлварь по database {db_pool}')
-        # Здесь может быть какой-то код, который выполнится в случае успешного завершения транзакции
 
         return result

@@ -1,12 +1,14 @@
 import logging
 
-from aiogram import Router
+from aiogram import Router, Bot
 from aiogram.filters import CommandStart
 from aiogram.types import User, CallbackQuery, Message, Chat
 from aiogram_dialog import Dialog, DialogManager, StartMode, Window
 from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.kbd import Button
+from datetime import time, timezone, timedelta
 
+from filters.my_filters import StartTime
 from lexicon.lexicon import LEXICON_RU
 from FSM.FSM import StartSG, OrderSG
 from database.db import (
@@ -14,7 +16,7 @@ from database.db import (
     get_order_id
 )
 
-logger = logging.Logger(__name__)
+logger = logging.getLogger(__name__)
 router = Router()
 
 async def start_order_dialog(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
@@ -35,13 +37,33 @@ main_menu_dialog = Dialog(
     Window(
         Format(text='Привет, <b>{username}</b>!\n'),
         Const(
-            text=LEXICON_RU.get('/start')),
+            text=LEXICON_RU.get('/start')
+        ),
         Button(text=Const('Сделать заказ'), id='get_order', on_click=start_order_dialog),
         getter=get_username,
         state=StartSG.start,
     ),
 )
 
-@router.message(CommandStart(), )
+
+@router.message(CommandStart())
 async def command_start_process(message: Message, dialog_manager: DialogManager):
-    await dialog_manager.start(state=StartSG.start, mode=StartMode.RESET_STACK)
+    tz_utc9 = timezone(timedelta(hours=9))
+    dt_local = message.date.astimezone(tz_utc9)
+
+    start = time(7, 20)
+    end = time(20, 0)
+
+    is_allowed = start <= dt_local.time() <= end
+    logger.info(f"Пользователь {message.from_user.username} -- {message.from_user.id} -- написал в {dt_local.time()}")
+
+    if is_allowed:
+        await dialog_manager.start(state=StartSG.start, mode=StartMode.RESET_STACK)
+    else:
+        await message.answer('Я принимаю заказы с 7-20 по 20-00')
+
+
+
+@router.message()
+async def delete_input_messages(message: Message, bot: Bot):
+    await bot.delete_message(chat_id=message.from_user.id, message_id=message.message_id)

@@ -16,7 +16,13 @@ async def took_order(callback: CallbackQuery, bot: Bot, conn: AsyncConnection):
     order_id = callback.data.split(':')[1]
     user_id = await get_user_from_order(conn, order_id=int(order_id))
 
+    group_keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text='Заказ готов', callback_data=f'ready:{order_id}')]
+        ]
+    )
+
     await callback.answer()
+    await callback.message.edit_text(text=callback.message.text, reply_markup=group_keyboard)
     await bot.send_message(chat_id=user_id, text='Заказ взять в работу')
 
 
@@ -32,10 +38,7 @@ async def took_order(callback: CallbackQuery, bot: Bot, conn: AsyncConnection):
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Заказ выполнен", callback_data="finish")]])
 
-    await bot.edit_message_text(text=callback.message.text,
-                                chat_id=callback.message.chat.id,
-                                message_id=callback.message.message_id,
-                                reply_markup=keyboard)
+    await callback.message.edit_text(text=callback.message.text, reply_markup=keyboard)
 
 
 @router.callback_query(F.data == 'finish', F.message.chat.id == -1003293541701)
