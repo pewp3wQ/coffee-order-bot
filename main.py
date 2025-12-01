@@ -26,8 +26,8 @@ logger = logging.getLogger(__name__)
 async def on_startup(bot: Bot) -> None:
     logger.info('Установлено меню и описание бота')
     #await bot.delete_my_commands()
-    await delete_command_in_group_chat(bot)
-    await delete_command_in_chat(bot)
+    # await delete_command_in_group_chat(bot)
+    # await delete_command_in_chat(bot)
     await set_user_menu(bot)
     await set_description(bot)
 
