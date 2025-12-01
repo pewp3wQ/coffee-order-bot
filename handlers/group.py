@@ -10,6 +10,11 @@ router = Router()
 logger = logging.getLogger(__name__)
 
 
+@router.message()
+async def delete_all_messages_from_group(message: Message, bot: Bot):
+    await bot.delete_message(chat_id=message.chat.id, message_id=message.from_user.id)
+
+
 @router.callback_query(F.data.split(':')[0] == 'queue')
 async def took_order(callback: CallbackQuery, bot: Bot, conn: AsyncConnection):
     logger.info('Прошел в хендлер взятия заказа в работу')
@@ -41,6 +46,6 @@ async def took_order(callback: CallbackQuery, bot: Bot, conn: AsyncConnection):
     await callback.message.edit_text(text=callback.message.text, reply_markup=keyboard)
 
 
-@router.callback_query(F.data == 'finish', F.message.chat.id == -1003293541701)
+@router.callback_query(F.data == 'finish')
 async def took_order(callback: CallbackQuery):
         await callback.answer()
