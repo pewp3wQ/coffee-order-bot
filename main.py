@@ -26,8 +26,7 @@ logger = logging.getLogger(__name__)
 async def on_startup(bot: Bot) -> None:
     logger.info('Установлено меню и описание бота')
     await bot.delete_my_commands()
-    # await set_user_menu(bot)
-    # await set_admin_menu(bot)
+    await set_user_menu(bot)
     await set_description(bot)
 
     logger.info('Вебхук установлен')
