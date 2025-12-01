@@ -26,29 +26,19 @@ logger = logging.getLogger(__name__)
 async def on_startup(bot: Bot) -> None:
     logger.info('Установлено меню и описание бота')
     await bot.delete_my_commands()
-    await set_user_menu(bot)
+    # await set_user_menu(bot)
     # await set_admin_menu(bot)
     await set_description(bot)
 
     logger.info('Вебхук установлен')
-    await bot.set_webhook(f"{config.webhook.base_url}{config.webhook.path}", secret_token=config.webhook.secret)
+    await bot.set_webhook(f"{config.webhook.base_url}{config.webhook.path}", secret_token=config.webhook.secret, drop_pending_updates=True)
+
 
 async def on_shutdown(dispatcher: Dispatcher, bot: Bot):
-    # Закрываем пул БД
-    # Закрываем бот
     db_pool = dispatcher.get("db_pool")
     await db_pool.close()
     await bot.session.close()
 
-async def create_pool(app: web.Application):
-    db_pool = await get_pg_pool(
-            db_name=config.db.name,
-            host=config.db.host,
-            port=config.db.port,
-            user=config.db.user,
-            password=config.db.password,
-        )
-    return db_pool
 
 async def main():
     log_config.setup_logging()

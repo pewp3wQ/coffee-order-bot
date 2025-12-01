@@ -106,19 +106,22 @@ async def send_order_to_group(bot: Bot, order_id: int, order_info: dict) -> None
         ]
     )
 
+    text = f'Номер заказа: {order_id}\n\n'\
+           f'Имя: {order_info["username"]}\n'\
+           f'Локация: {ORDER_DATA["location"][order_info.get("location")]}\n'\
+           f'Объем: {ORDER_DATA["volume"].get(order_info.get("volume"))}\n'\
+           f'Напиток: {ORDER_DATA["coffee"][order_info.get("category")].get(order_info.get("coffee"))}\n'\
+           f'Основа кофе: {ORDER_DATA["coffee_base"].get(order_info.get("coffee_base"), "Ничего")}\n'\
+           f'Сахар: {ORDER_DATA["sugar"].get(order_info.get("sugar"))}\n'\
+           f'Топпинг: {ORDER_DATA["toppings"].get(order_info.get("toppings"))}\n'\
+           f'Добавка: {ORDER_DATA["additional"].get(order_info.get("additional"))}\n'\
+           f'Цена: {order_info.get("price")}\n'
+    
+    
     await bot.send_message(chat_id=-1003293541701,
-                           text=f'Номер заказа: {order_id}\n\n'
-                                f'Имя: {order_info["username"]}\n'
-                                f'Локация: {ORDER_DATA["location"][order_info.get("location")]}\n'
-                                f'Объем: {ORDER_DATA["volume"].get(order_info.get("volume"))}\n'
-                                f'Напиток: {ORDER_DATA["coffee"][order_info.get("category")].get(order_info.get("coffee"))}\n'
-                                f'Основа кофе: {ORDER_DATA["coffee_base"].get(order_info.get("coffee_base"), "Ничего")}\n'
-                                f'Сахар: {ORDER_DATA["sugar"].get(order_info.get("sugar"))}\n'
-                                f'Топпинг: {ORDER_DATA["toppings"].get(order_info.get("toppings"))}\n'
-                                f'Добавка: {ORDER_DATA["additional"].get(order_info.get("additional"))}\n'
-                                f'Цена: {order_info.get("price")}\n',
+                           text=text,
                            reply_markup=group_keyboard
-                           )
+    )
 
 
 async def calculating_price(conn: AsyncConnection, order_info: dict) -> int:
