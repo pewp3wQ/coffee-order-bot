@@ -26,8 +26,8 @@ ORDER_DATA: dict[str, dict] = {
         'cold': 'Колд'
     },
     'location': {
-        'ordzhonikidze': 'Орджоникидзе',
-        'microdistrict': '202-микр'
+        'ordzhonikidze': 'Орджоникидзе, д. 17',
+        'microdistrict': '203 мкр. к. 30'
     },
     'volume': {
         '60': '60 мл',
@@ -275,13 +275,24 @@ ORDER_DATA: dict[str, dict] = {
         '5': '5'
     },
     'toppings': {
-        'nothing': 'Без топпинга',
-        'chocolate': 'Шоколад',
-        'nuts': 'Орех',
-        'carmel': 'Карамель',
-        'syrup': 'Клиновый сироп',
-        'peach': 'Персик',
-        'orange': 'Апельсин'
+        "nothing": "Без топпинга",
+        "caramel": "Карамель",
+        "salted_caramel": "Солёная карамель",
+        "vanilla": "Ваниль",
+        "chocolate": "Шоколад",
+        "hazelnut": "Лесной орех",
+        "coconut": "Кокос",
+        "almond": "Миндаль",
+        "pistachio": "Фисташка",
+        "cinnabon": "Синнабон",
+        "maple": "Клён",
+        "mint": "Мята",
+        "cherry": "Вишня",
+        "strawberry": "Клубника",
+        "pomegranate": "Гранат",
+        "banana": "Банан",
+        "peach": "Персик",
+        "orange": "Апельсин"
     },
     'additional': {
         'nothing': 'Без доп. добавок',

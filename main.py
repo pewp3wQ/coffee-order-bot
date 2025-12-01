@@ -51,7 +51,7 @@ async def create_pool(app: web.Application):
     return db_pool
 
 async def main():
-    # log_config.setup_logging()
+    log_config.setup_logging()
 
     storage = RedisStorage(
         redis=Redis(
@@ -106,9 +106,9 @@ async def main():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(
-        level=logging.getLevelName(level=config.log.level),
-        format=config.log.format
-    )
+    # logging.basicConfig(
+    #     level=logging.getLevelName(level=config.log.level),
+    #     format=config.log.format
+    # )
     web.run_app(main(), host=config.webhook.server, port=int(config.webhook.port))
     # asyncio.run(main())

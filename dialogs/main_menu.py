@@ -51,7 +51,7 @@ async def command_start_process(message: Message, dialog_manager: DialogManager)
     dt_local = message.date.astimezone(tz_utc9)
 
     start = time(7, 20)
-    end = time(20, 0)
+    end = time(23, 0)
 
     is_allowed = start <= dt_local.time() <= end
     logger.info(f"Пользователь {message.from_user.username} -- {message.from_user.id} -- написал в {dt_local.time()}")
