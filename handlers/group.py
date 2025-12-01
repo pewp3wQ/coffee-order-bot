@@ -47,8 +47,3 @@ async def took_order(callback: CallbackQuery, bot: Bot, conn: AsyncConnection):
 @router.callback_query(F.data == 'finish', F.message.chat.id == int(config.group.group_id))
 async def took_order(callback: CallbackQuery):
         await callback.answer()
-
-
-@router.message(Command("/start"))
-async def answer_to_grop_chat(message: Message, bot: Bot):
-    await message.answer('Тут я не могу принмать заказ')
