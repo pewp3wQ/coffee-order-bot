@@ -1,7 +1,5 @@
-import asyncio
 import logging
 
-from aiogram.client.session.aiohttp import AiohttpSession
 from psycopg_pool import AsyncConnectionPool
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from aiogram_dialog import setup_dialogs
@@ -65,15 +63,10 @@ async def main():
         ),
         key_builder=DefaultKeyBuilder(with_destiny=True)
     )
-    session = AiohttpSession(
-        proxy="socks5://n:p@IP_ЗАРУБЕЖНОГО_СЕРВЕРА:1080"
-    )
-
 
     bot = Bot(
         token=config.bot.token,
-        default=DefaultBotProperties(parse_mode=ParseMode.HTML),
-        session=session
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML)
     )
     dp = Dispatcher(storage=storage)
 
