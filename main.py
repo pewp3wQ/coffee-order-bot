@@ -17,7 +17,7 @@ from database.connection import get_pg_pool
 from dialogs import main_menu, order
 from middleware.db_connection import DataBaseMiddleware
 from handlers import group
-from menu.set_menu import set_user_menu, set_description
+from menu.set_menu import set_user_menu, set_description, delete_command_in_group_chat, delete_command_in_chat
 
 config: Config = load_config()
 logger = logging.getLogger(__name__)
@@ -25,7 +25,9 @@ logger = logging.getLogger(__name__)
 
 async def on_startup(bot: Bot) -> None:
     logger.info('Установлено меню и описание бота')
-    await bot.delete_my_commands()
+    #await bot.delete_my_commands()
+    await delete_command_in_group_chat(bot)
+    await delete_command_in_chat(bot)
     await set_user_menu(bot)
     await set_description(bot)
 
