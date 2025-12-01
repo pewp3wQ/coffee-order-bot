@@ -44,7 +44,7 @@ async def took_order(callback: CallbackQuery, bot: Bot, conn: AsyncConnection):
     await callback.message.edit_text(text=callback.message.text, reply_markup=keyboard)
 
 
-@router.callback_query(F.data == 'finish', F.message.chat.id == config.group.group_id)
+@router.callback_query(F.data == 'finish', F.message.chat.id == int(config.group.group_id))
 async def took_order(callback: CallbackQuery):
         await callback.answer()
 
