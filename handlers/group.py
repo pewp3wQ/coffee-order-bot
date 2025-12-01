@@ -1,14 +1,16 @@
 import logging
 
 from aiogram import Router, F, Bot
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, Command
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 from psycopg.connection_async import AsyncConnection
 
+from config.config import Config, load_config
 from database.db import get_user_from_order
 
 router = Router()
 logger = logging.getLogger(__name__)
+config: Config = load_config()
 
 
 @router.callback_query(F.data.split(':')[0] == 'queue')
@@ -42,11 +44,11 @@ async def took_order(callback: CallbackQuery, bot: Bot, conn: AsyncConnection):
     await callback.message.edit_text(text=callback.message.text, reply_markup=keyboard)
 
 
-@router.callback_query(F.data == 'finish')
+@router.callback_query(F.data == 'finish', F.message.chat.id == config.group.group_id)
 async def took_order(callback: CallbackQuery):
         await callback.answer()
 
 
-@router.message(CommandStart())
+@router.message(Command("/start"))
 async def answer_to_grop_chat(message: Message, bot: Bot):
     await message.answer('Тут я не могу принмать заказ')
