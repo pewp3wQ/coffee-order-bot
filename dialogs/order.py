@@ -250,7 +250,7 @@ order_dialog = Dialog(
 
     Window(
         Const(text=LEXICON_RU['inline_kb_text']['sugar']),
-        Column(
+        ScrollingGroup(
           Select(
               Format("{item[1]}"),
               id="sugar",
@@ -258,7 +258,9 @@ order_dialog = Dialog(
               items="sugars",
               on_click=sugar_callback_click
           ),
-        id="sugar_group"
+            id="sugar_group",
+            width=1,
+            height=6
         ),
         Button(text=Const(text='Назад'), id='coffee_base_back', on_click=back_button_click),
         getter=get_sugar_menu,
