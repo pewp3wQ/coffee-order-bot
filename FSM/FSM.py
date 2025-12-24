@@ -14,4 +14,8 @@ class OrderSG(StatesGroup):
     set_sugar = State()
     set_toppings = State()
     set_additional = State()
+    set_temperature = State()
     set_finish = State()
+
+class AdminMenuSG(StatesGroup):
+    admin_menu_start = State()

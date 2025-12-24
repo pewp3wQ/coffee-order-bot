@@ -3,11 +3,11 @@ from typing import Any
 from psycopg.connection_async import AsyncConnection
 
 from aiogram import Bot, Router
-from aiogram.types import CallbackQuery, Message, User, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram_dialog import Dialog, DialogManager, Window
 from aiogram_dialog.api.entities import Context
 from aiogram_dialog.widgets.text import Const, Format
-from aiogram_dialog.widgets.kbd import Button, Column, ScrollingGroup, Select
+from aiogram_dialog.widgets.kbd import Button, Column, ScrollingGroup, Select, Group
 
 from lexicon.lexicon import LEXICON_RU, ORDER_DATA
 from FSM.FSM import OrderSG
@@ -34,42 +34,99 @@ async def drink_category(callback: CallbackQuery, button: Button, dialog_manager
 
 async def coffee_callback_click(callback: CallbackQuery, widget: Select, dialog_manager: DialogManager, item_id: Any):
     dialog_manager.dialog_data['coffee'] = item_id
-    await dialog_manager.next()
+
+    if dialog_manager.dialog_data['coffee'] in ['espresso_x2', 'bamble', 'espresso_tonic']:
+        dialog_manager.dialog_data['volume'] = ORDER_DATA['coffee_items'][dialog_manager.dialog_data.get('coffee')]['sizes'][0]
+        dialog_manager.dialog_data['coffee_base'] = 'nothing'
+        dialog_manager.dialog_data['sugar'] = 'nothing'
+        dialog_manager.dialog_data['toppings'] = 'nothing'
+        dialog_manager.dialog_data['additional'] = 'nothing'
+        dialog_manager.dialog_data['temperature'] = 'no'
+        await dialog_manager.switch_to(state=OrderSG.set_finish)
+
+    else:
+        await dialog_manager.next()
 
 
 async def volume_callback_click(callback: CallbackQuery, widget: Select, dialog_manager: DialogManager, item_id: Any):
     dialog_manager.dialog_data['volume'] = item_id
-    if dialog_manager.dialog_data['coffee'] in ['americano', 'espresso_x2']:
+
+    if dialog_manager.dialog_data.get('coffee') in ['americano']:
         dialog_manager.dialog_data['coffee_base'] = 'nothing'
         await dialog_manager.switch_to(state=OrderSG.set_sugar)
+
+    elif dialog_manager.dialog_data.get('coffee') in ['ice_americano']:
+        dialog_manager.dialog_data['coffee_base'] = 'nothing'
+        dialog_manager.dialog_data['sugar'] = 'nothing'
+        await dialog_manager.switch_to(state=OrderSG.set_toppings)
+
+    elif dialog_manager.dialog_data.get('coffee') in ['kakao', 'raf_caramel_popcorn', 'raf_chocolate'] or dialog_manager.dialog_data.get('category') == 'cream':
+        dialog_manager.dialog_data['coffee_base'] = 'nothing'
+        dialog_manager.dialog_data['sugar'] = 'nothing'
+        dialog_manager.dialog_data['toppings'] = 'nothing'
+        await dialog_manager.switch_to(state=OrderSG.set_additional)
+
     else:
         await dialog_manager.next()
 
 
 async def base_callback_click(callback: CallbackQuery, widget: Select, dialog_manager: DialogManager, item_id: Any):
     dialog_manager.dialog_data['coffee_base'] = item_id
-    await dialog_manager.next()
+
+    if dialog_manager.dialog_data.get('coffee') in ['latte_nut', 'latte_peanut', 'latte_spicy_maple', 'latte_salted_caramel']:
+        dialog_manager.dialog_data['sugar'] = 'nothing'
+        dialog_manager.dialog_data['toppings'] = 'nothing'
+        await dialog_manager.switch_to(state=OrderSG.set_additional)
+    else:
+        await dialog_manager.next()
 
 
 async def sugar_callback_click(callback: CallbackQuery, widget: Select, dialog_manager: DialogManager, item_id: Any):
     dialog_manager.dialog_data['sugar'] = item_id
-    await dialog_manager.next()
+
+    if dialog_manager.dialog_data['sugar'] != 'nothing':
+        dialog_manager.dialog_data['toppings'] = 'nothing'
+
+        if dialog_manager.dialog_data.get('coffee') in ['ice_latte', 'ice_matcha']:
+            dialog_manager.dialog_data['additional'] = 'nothing'
+            dialog_manager.dialog_data['temperature'] = 'no'
+            await dialog_manager.switch_to(state=OrderSG.set_finish)
+        else:
+            await dialog_manager.switch_to(state=OrderSG.set_additional)
+    else:
+        await dialog_manager.next()
 
 
 async def toppings_callback_click(callback: CallbackQuery, widget: Select, dialog_manager: DialogManager, item_id: Any):
     dialog_manager.dialog_data['toppings'] = item_id
-    await dialog_manager.next()
+
+    if dialog_manager.dialog_data.get('coffee') in ['ice_latte', 'ice_matcha']:
+        dialog_manager.dialog_data['additional'] = 'nothing'
+        dialog_manager.dialog_data['temperature'] = 'no'
+        await dialog_manager.switch_to(state=OrderSG.set_finish)
+    else:
+        await dialog_manager.next()
 
 
 async def additional_callback_click(callback: CallbackQuery, widget: Select, dialog_manager: DialogManager, item_id: Any):
     dialog_manager.dialog_data['additional'] = item_id
+
+    if dialog_manager.dialog_data.get('coffee') in ['ice_americano', 'raf_caramel_popcorn', 'raf_chocolate']:
+        dialog_manager.dialog_data['temperature'] = 'no'
+        await dialog_manager.switch_to(state=OrderSG.set_finish)
+    else:
+        await dialog_manager.next()
+
+
+async def temperature_callback_click(callback: CallbackQuery, widget: Select, dialog_manager: DialogManager, item_id: Any):
+    dialog_manager.dialog_data['temperature'] = item_id
     await dialog_manager.next()
 
 
 async def get_order(dialog_manager: DialogManager, bot: Bot, **kwargs):
     order_info = dialog_manager.dialog_data
     order_id = dialog_manager.start_data
-    logger.info(f'Данные по заказу >>>> {order_id} >>> {order_info}')
+    logger.info(f'Данные по заказу >>>> {order_id} >>>> {order_info}')
 
     order_price = await calculating_price(dialog_manager.middleware_data['conn'], order_info)
     order_info['price'] = order_price
@@ -92,10 +149,11 @@ async def get_order(dialog_manager: DialogManager, bot: Bot, **kwargs):
         'location': ORDER_DATA['location'].get(order_info.get('location')),
         'volume': ORDER_DATA['volume'].get(order_info.get('volume')),
         'coffee': ORDER_DATA['coffee'][order_info.get('category')].get(dialog_manager.dialog_data.get('coffee')),
-        'coffee_base': ORDER_DATA['coffee_base'].get(order_info.get('coffee_base'), 'Ничего'),
+        'coffee_base': ORDER_DATA['coffee_base'].get(order_info.get('coffee_base'), 'Без молока'),
         'sugar': ORDER_DATA['sugar'].get(order_info.get('sugar')),
         'toppings': ORDER_DATA['toppings'].get(order_info.get('toppings')),
         'additional': ORDER_DATA['additional'].get(order_info.get('additional')),
+        'temperature': ORDER_DATA['temperature'].get(order_info.get('temperature')),
         'price': order_info.get('price')
     }
 
@@ -108,13 +166,14 @@ async def send_order_to_group(bot: Bot, order_id: int, order_info: dict) -> None
 
     text = f'Номер заказа: {order_id}\n\n'\
            f'Имя: {order_info["username"]}\n'\
-           f'Локация: {ORDER_DATA["location"][order_info.get("location")]}\n'\
+           f'Локация: {ORDER_DATA["location"][order_info.get("location")]}\n' \
+           f'Напиток: {ORDER_DATA["coffee"][order_info.get("category")].get(order_info.get("coffee"))}\n' \
            f'Объем: {ORDER_DATA["volume"].get(order_info.get("volume"))}\n'\
-           f'Напиток: {ORDER_DATA["coffee"][order_info.get("category")].get(order_info.get("coffee"))}\n'\
-           f'Основа кофе: {ORDER_DATA["coffee_base"].get(order_info.get("coffee_base"), "Ничего")}\n'\
+           f'Мололо: {ORDER_DATA["coffee_base"].get(order_info.get("coffee_base"), "Без молока")}\n'\
            f'Сахар: {ORDER_DATA["sugar"].get(order_info.get("sugar"))}\n'\
            f'Топпинг: {ORDER_DATA["toppings"].get(order_info.get("toppings"))}\n'\
            f'Добавка: {ORDER_DATA["additional"].get(order_info.get("additional"))}\n'\
+           f'Горячий кофе: {ORDER_DATA["temperature"].get(order_info.get("temperature"))}\n'\
            f'Цена: {order_info.get("price")}\n'
     
     
@@ -122,7 +181,6 @@ async def send_order_to_group(bot: Bot, order_id: int, order_info: dict) -> None
                            text=text,
                            reply_markup=group_keyboard
     )
-
 
 async def calculating_price(conn: AsyncConnection, order_info: dict) -> int:
     coffee_price = await get_price(conn, product_name=order_info['coffee'], category=order_info['category'], volume=order_info['volume'])
@@ -142,9 +200,40 @@ async def calculating_price(conn: AsyncConnection, order_info: dict) -> int:
 
     return order_price
 
-
 async def back_button_click(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
     await dialog_manager.back()
+
+async def special_back_button_click(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+    context = dialog_manager.current_context()
+
+    if dialog_manager.dialog_data['coffee'] in ['latte_nut', 'latte_peanut', 'latte_spicy_maple', 'latte_salted_caramel'] and context.state == OrderSG.set_additional:
+        await dialog_manager.switch_to(state=OrderSG.set_coffee_base)
+
+    elif dialog_manager.dialog_data['coffee'] in ['americano', 'kakao'] and (context.state == OrderSG.set_sugar or context.state == OrderSG.set_additional):
+        await dialog_manager.switch_to(state=OrderSG.set_volume)
+
+    elif dialog_manager.dialog_data['category'] in ['cream', 'signature'] and context.state == OrderSG.set_additional:
+        await dialog_manager.switch_to(state=OrderSG.set_volume)
+
+    elif dialog_manager.dialog_data['coffee'] == 'ice_americano':
+        if context.state == OrderSG.set_toppings:
+            await dialog_manager.switch_to(state=OrderSG.set_volume)
+
+        elif context.state == OrderSG.set_additional:
+            await dialog_manager.switch_to(state=OrderSG.set_toppings)
+
+    elif dialog_manager.dialog_data['coffee'] in ['raf_caramel_popcorn', 'raf_chocolate']:
+        if context.state == OrderSG.set_additional:
+            await dialog_manager.switch_to(state=OrderSG.set_volume)
+
+    elif context.state == OrderSG.set_additional and dialog_manager.dialog_data['coffee'] not in ['kakao', 'raf_vanilla', 'raf_nut', 'raf_coconut']:
+        if dialog_manager.dialog_data['sugar'] == 'nothing':
+            await dialog_manager.switch_to(state=OrderSG.set_toppings)
+        else:
+            await dialog_manager.switch_to(state=OrderSG.set_sugar)
+
+    else:
+        await dialog_manager.back()
 
 
 async def get_volume_menu(aiogd_context: Context,**kwargs):
@@ -165,6 +254,7 @@ async def get_coffee_base_menu(**kwargs):
     items = [(key, value) for key, value in ORDER_DATA.get('coffee_base').items()]
     return {'bases': items}
 
+
 async def get_sugar_menu(**kwargs):
     items = [(key, value) for key, value in ORDER_DATA.get('sugar').items()]
     return {'sugars': items}
@@ -175,9 +265,23 @@ async def get_toppings_menu(dialog_manager: DialogManager, **kwargs):
     return {'toppings': items}
 
 
-async def get_additional_menu(**kwargs):
+async def get_additional_menu(dialog_manager: DialogManager, **kwargs):
     items = [(key, value) for key, value in ORDER_DATA.get("additional").items()]
+
+    if dialog_manager.dialog_data['coffee'] == 'americano':
+        items.pop(2)
+    elif dialog_manager.dialog_data['coffee'] in ['cappuccino', 'flat_white', 'latte', 'ice_americano'] or dialog_manager.dialog_data['category'] == 'signature':
+        items = items[0:3]
+    elif dialog_manager.dialog_data['coffee'] in ['kakao', 'matcha_latte'] or dialog_manager.dialog_data['category'] in ['cream']:
+        items.pop(1)
+        items = items[0:2]
+
     return {"additional": items}
+
+
+async def get_temperature_menu(dialog_manager: DialogManager, **kwargs):
+    items = [(key, value) for key, value in ORDER_DATA.get("temperature").items()]
+    return {"temperature": items}
 
 
 order_dialog = Dialog(
@@ -224,7 +328,7 @@ order_dialog = Dialog(
                 on_click=volume_callback_click
             )
         ),
-        Button(text=Const('Назад'), id='volume_back', on_click=back_button_click),
+        Button(text=Const('Назад'), id='volume_back', on_click=special_back_button_click),
         getter=get_volume_menu,
         state=OrderSG.set_volume
     ),
@@ -243,14 +347,14 @@ order_dialog = Dialog(
             width=1,
             height=6
         ),
-        Button(text=Const(text='Назад'), id='coffee_base_back', on_click=back_button_click),
+        Button(text=Const(text='Назад'), id='coffee_base_back', on_click=special_back_button_click),
         getter=get_coffee_base_menu,
         state=OrderSG.set_coffee_base
     ),
 
     Window(
         Const(text=LEXICON_RU['inline_kb_text']['sugar']),
-        ScrollingGroup(
+        Group(
           Select(
               Format("{item[1]}"),
               id="sugar",
@@ -258,11 +362,9 @@ order_dialog = Dialog(
               items="sugars",
               on_click=sugar_callback_click
           ),
-            id="sugar_group",
-            width=1,
-            height=6
+            width=2
         ),
-        Button(text=Const(text='Назад'), id='coffee_base_back', on_click=back_button_click),
+        Button(text=Const(text='Назад'), id='sugar_back', on_click=special_back_button_click),
         getter=get_sugar_menu,
         state=OrderSG.set_sugar
     ),
@@ -280,7 +382,7 @@ order_dialog = Dialog(
             width=1,
             height=6,
         ),
-        Button(text=Const(text='Назад'), id='toppings_back', on_click=back_button_click),
+        Button(text=Const(text='Назад'), id='toppings_back', on_click=special_back_button_click),
         getter=get_toppings_menu,
         state=OrderSG.set_toppings
 
@@ -299,9 +401,25 @@ order_dialog = Dialog(
             width=1,
             height=6,
         ),
-        Button(text=Const(text='Назад'), id='additional_back', on_click=back_button_click),
+        Button(text=Const(text='Назад'), id='additional_back', on_click=special_back_button_click),
         getter=get_additional_menu,
         state=OrderSG.set_additional
+    ),
+
+    Window(
+        Const(text=LEXICON_RU['inline_kb_text']['temperature']),
+        Group(
+            Select(
+                Format('{item[1]}'),
+                id='temp',
+                item_id_getter=lambda x: x[0],
+                items='temperature',
+                on_click=temperature_callback_click
+            ),
+        ),
+        Button(text=Const(text='Назад'), id='additional_back', on_click=special_back_button_click),
+        getter=get_temperature_menu,
+        state=OrderSG.set_temperature
     ),
 
     Window(
@@ -309,10 +427,11 @@ order_dialog = Dialog(
         Format(text='Локация - {location}\n'
                     'Напиток - {coffee}\n'
                     'Объем - {volume}\n'
-                    'Основа кофе - {coffee_base}\n'
+                    'Молоко - {coffee_base}\n'
                     'Сахар - {sugar}\n'
                     'Топпинг - {toppings}\n'
                     'Добавки - {additional}\n'
+                    'Горячий кофе ? - {temperature}\n'
                     'Цена - {price} руб.'),
         getter=get_order,
         state=OrderSG.set_finish)

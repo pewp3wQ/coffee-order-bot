@@ -7,23 +7,25 @@ LEXICON_RU: dict[str, str | dict] = {
                    "чтобы ты смог забарть заказ без ожидания",
 
     "inline_kb_text": {
-        'category': 'Что сегодня выберете ?',
-        'location': 'Откуда заберете заказ ?',
-        'volume': 'Какой объем желаете ?',
-        'coffee': 'Что будете пить сегодня ?',
-        'coffee_base': 'На каком молоке хотите сделать',
-        'sugar': 'Сколько ложек сахара положить ?',
-        'toppings': 'Какой топпинг добваить ?',
-        'additional': 'Что нибудь еще добавить ?'
+        'category': 'Что сегодня для вас приготовим?',
+        'location': 'Где вам будет удобнее забрать заказ?',
+        'volume': 'Какой объем желаете?',
+        'coffee': 'Какой кофе хотите сегодня?',
+        'coffee_base': 'На каком молоке будем готовить?',
+        'sugar': 'Сколько ложек сахара добавить?',
+        'toppings': 'Какой сироп желаете?',
+        'additional': 'Добавим что-нибудь еще?',
+        'temperature': 'Сделать напиток погорячее?'
     }
 }
 
 ORDER_DATA: dict[str, dict] = {
     'category': {
-        'classic': 'Классическое кофе',
-        'cream': 'Кофе на основе сликов',
-        'signature': 'Авторское кофе',
-        'cold': 'Колд'
+        'classic': 'Классика',
+        'mokka': 'Матча латте, Какао',
+        'cream': 'Кофе на основе сливок',
+        'signature': 'Спешл',
+        'cold': 'Холодные кофе'
     },
     'location': {
         'ordzhonikidze': 'Орджоникидзе, д. 17',
@@ -46,8 +48,8 @@ ORDER_DATA: dict[str, dict] = {
           "americano": {
             "name": "Американо",
             "category": "classic",
-            "sizes": ["250", "350"],
-            "prices": { "250": 150, "350": 150 }
+            "sizes": ["250", "350", "450"],
+            "prices": { "250": 170, "350": 170, "450": 170}
           },
 
           "cappuccino": {
@@ -129,13 +131,6 @@ ORDER_DATA: dict[str, dict] = {
             "prices": { "350": 240, "450": 260 }
           },
 
-          "latte_halva": {
-            "name": "Латте халва",
-            "category": "signature",
-            "sizes": ["350", "450"],
-            "prices": { "350": 240, "450": 260 }
-          },
-
           "latte_peanut": {
             "name": "Латте арахис",
             "category": "signature",
@@ -205,20 +200,6 @@ ORDER_DATA: dict[str, dict] = {
             "sizes": ["350"],
             "prices": { "350": 230 }
           },
-
-          "milkshake": {
-            "name": "Молочный коктейль",
-            "category": "cold",
-            "sizes": ["350"],
-            "prices": { "350": 290 }
-          },
-
-          "lemonade": {
-            "name": "Домашний лимонад",
-            "category": "cold",
-            "sizes": ["350", "450"],
-            "prices": { "350": 210, "450": 230 }
-          }
         },
     "coffee": {
         "classic": {
@@ -226,48 +207,40 @@ ORDER_DATA: dict[str, dict] = {
           "americano": "Американо",
           "cappuccino": "Капучино",
           "flat_white": "Флэт уайт",
-          "kakao": "Какао",
           "latte": "Латте",
-          "mokkachino": "Моккачино",
+        },
+        "mokka": {
+          "kakao": "Какао",
           "matcha_latte": "Матча латте"
         },
-
         "cream": {
           "raf_vanilla": "Раф ваниль",
           "raf_nut": "Раф орех",
-          "raf_citrus": "Раф цитрус",
           "raf_coconut": "Раф кокос"
         },
-
         "signature": {
           "latte_nut": "Латте орех",
-          "latte_halva": "Латте халва",
           "latte_peanut": "Латте арахис",
           "latte_spicy_maple": "Латте пряный с клёном",
           "latte_salted_caramel": "Латте солёная карамель",
           "raf_caramel_popcorn": "Раф карамельный попкорн",
           "raf_chocolate": "Раф шоколад"
         },
-
         "cold": {
           "bamble": "Бамбл",
           "espresso_tonic": "Эспрессо-тоник",
           "ice_americano": "Айс-американо",
           "ice_latte": "Айс-латте",
-          "ice_matcha": "Айс-матча",
-          "milkshake": "Молочный коктейль",
-          "lemonade": "Домашний лимонад"
+          "ice_matcha": "Айс-матча"
         }
     },
     'coffee_base': {
-        'milk': 'Молоко',
+        'milk': 'Молоко 3.2 %',
         'oat_milk': 'Овсяное',
-        'soy_milk': 'Соевое',
         'coconut_milk': 'Кокосовое',
         'almond_milk': 'Миндальное'
     },
     'sugar': {
-        'nothing': 'Без сахара',
         '0.5': '0.5',
         '1': '1',
         '1.5': '1.5',
@@ -276,11 +249,10 @@ ORDER_DATA: dict[str, dict] = {
         '3': '3',
         '3.5': '3.5',
         '4': '4',
-        '4.5': '4.5',
-        '5': '5'
+        'nothing': 'Без сахара'
     },
     'toppings': {
-        "nothing": "Без топпинга",
+        "nothing": "Без сиропа",
         "caramel": "Карамель",
         "salted_caramel": "Солёная карамель",
         "vanilla": "Ваниль",
@@ -301,18 +273,43 @@ ORDER_DATA: dict[str, dict] = {
     },
     'additional': {
         'nothing': 'Без доп. добавок',
-        'extra_espresso': 'Эсперссо',
-        'marshmallow': 'Маршмелоу',
-        'milk': 'Молоко',
-        'oat_milk': 'Овсяное молоко',
-        'soy_milk': 'Соевое молоко',
-        'coconut_milk': 'Кокосовое молоко',
-        'almond_milk': 'Миндальное молоко'
+        'extra_espresso': 'Эспрессо',
+        'marshmallow': 'Маршмеллоу',
+        'milk': 'Молоко 3.2 % (20 мл.)',
+        'oat_milk': 'Овсяное молоко (20 мл.)',
+        'coconut_milk': 'Кокосовое молоко (20 мл.)',
+        'almond_milk': 'Миндальное молоко (20 мл.)'
     },
-    'noting': 'Ничего'
+    'temperature': {
+        'yes': 'Да',
+        'no': ' Нет'
+    }
 }
 
 GROUP_BUTTONS: dict[str, str] = {
     'queue': 'Взялся за заказ',
     'ready': 'Заказ готов'
+}
+
+ADMIN_MENU: dict[str, dict] = {
+    'main_menu': {
+        'change_price': 'Поменять цену товара',
+        'remove_item': 'Убрать товар из меню',
+        'add_item': 'Добваить товар в меню',
+        'send_messages': 'Сделать рассылку'
+    },
+
+    'change_price_menu': {
+        'price_coffee': 'Поменять цену кофе',
+        'price_milk': 'Поменять цену молока',
+        'price_topping': 'Поменять цену топпинга',
+        'price_additional': 'Поменять цену добавок',
+    },
+
+    'remove_item': {
+        'coffee': 'Убрать кофе из меню',
+        'milk': 'Убрать молоко из меню',
+        'topping': 'Убрать топпинг из меню',
+        'additional': 'Убрать доп. добавку из меню',
+    }
 }
