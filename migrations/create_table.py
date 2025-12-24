@@ -78,11 +78,12 @@ async def main():
 
                     coffee_data = [
                           ["espresso_x2", "classic", "60", 150],
-                          ["americano", "classic", "250", 150],
-                          ["americano", "classic", "350", 150],
-                          ["cappuccino", "classic", "250", 210],
-                          ["cappuccino", "classic", "350", 230],
-                          ["cappuccino", "classic", "450", 250],
+                          ["americano", "classic", "250", 170],
+                          ["americano", "classic", "350", 170],
+                          ["americano", "classic", "450", 170],
+                          ["cappuccino", "classic", "250", 220],
+                          ["cappuccino", "classic", "350", 250],
+                          ["cappuccino", "classic", "450", 280],
                           ["latte", "classic", "350", 230],
                           ["latte", "classic", "450", 250],
                           ["flat_white", "classic", "250", 210],
@@ -102,8 +103,6 @@ async def main():
                           ["raf_coconut", "cream", "450", 280],
                           ["latte_nut", "signature", "350", 240],
                           ["latte_nut", "signature", "450", 260],
-                          ["latte_halva", "signature", "350", 240],
-                          ["latte_halva", "signature", "450", 260],
                           ["latte_peanut", "signature", "350", 240],
                           ["latte_peanut", "signature", "450", 260],
                           ["latte_spicy_maple", "signature", "350", 240],
@@ -132,7 +131,6 @@ async def main():
                         ["marshmallow", "additional", "", 30],
                         ["milk", "additional", "", 0],
                         ["oat_milk", "additional", "", 30],
-                        ["soy_milk", "additional", "", 30],
                         ["coconut_milk", "additional", "", 30],
                         ["almond_milk", "additional", "", 30]
                     ]
