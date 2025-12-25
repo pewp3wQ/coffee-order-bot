@@ -70,7 +70,7 @@ async def main():
     )
 
     dp["db_pool"] = db_pool
-    await bot.delete_webhook()
+    # await bot.delete_webhook()
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
     logger.info('Router including')
