@@ -32,10 +32,10 @@ async def on_startup(bot: Bot) -> None:
     await set_user_menu(bot)
     await set_description(bot)
 
-    # logger.info('Вебхук установлен')
-    # await bot.set_webhook(url=f"{config.webhook.base_url}{config.webhook.path}",
-    #                       secret_token=config.webhook.secret,
-    #                       drop_pending_updates=True)
+    logger.info('Вебхук установлен')
+    await bot.set_webhook(url=f"{config.webhook.base_url}{config.webhook.path}",
+                          secret_token=config.webhook.secret,
+                          drop_pending_updates=True)
 
 
 async def on_shutdown(dispatcher: Dispatcher, bot: Bot):
@@ -73,7 +73,7 @@ async def main():
     )
 
     dp["db_pool"] = db_pool
-    await bot.delete_webhook()
+    # await bot.delete_webhook()
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
     logger.info('Router including')
@@ -89,16 +89,16 @@ async def main():
     logger.info("Including middlewares...")
     dp.update.middleware(DataBaseMiddleware())
 
-    await dp.start_polling(bot)
-    # app = web.Application()
-    # webhook_requests_handler = SimpleRequestHandler(
-    #     dispatcher=dp,
-    #     bot=bot,
-    #     secret_token=config.webhook.secret
-    # )
-    # webhook_requests_handler.register(app, path=config.webhook.path)
-    # setup_application(app, dp, bot=bot)
-    # return app
+    # await dp.start_polling(bot)
+    app = web.Application()
+    webhook_requests_handler = SimpleRequestHandler(
+        dispatcher=dp,
+        bot=bot,
+        secret_token=config.webhook.secret
+    )
+    webhook_requests_handler.register(app, path=config.webhook.path)
+    setup_application(app, dp, bot=bot)
+    return app
 
 
 if __name__ == '__main__':
@@ -106,5 +106,5 @@ if __name__ == '__main__':
         level=logging.getLevelName(level=config.log.level),
         format=config.log.format
     )
-    asyncio.run(main())
-    # web.run_app(main(), host=config.webhook.server, port=int(config.webhook.port))
+    # asyncio.run(main())
+    web.run_app(main(), host=config.webhook.server, port=int(config.webhook.port))
