@@ -45,7 +45,7 @@ async def on_shutdown(dispatcher: Dispatcher, bot: Bot):
 
 
 async def main():
-    # log_config.setup_logging()
+    log_config.setup_logging()
 
     storage = RedisStorage(
         redis=Redis(
@@ -102,9 +102,9 @@ async def main():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(
-        level=logging.getLevelName(level=config.log.level),
-        format=config.log.format
-    )
-    # asyncio.run(main())
+    # logging.basicConfig(
+    #     level=logging.getLevelName(level=config.log.level),
+    #     format=config.log.format
+    # )
+    asyncio.run(main())
     web.run_app(main(), host=config.webhook.server, port=int(config.webhook.port))
