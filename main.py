@@ -15,7 +15,7 @@ from redis.asyncio import Redis
 from config.config import load_config, Config
 from log_settings import log_config
 from database.connection import get_pg_pool
-from dialogs import main_menu, order, admin_menu
+from dialogs import main_menu, order
 from middleware.db_connection import DataBaseMiddleware
 from handlers import group
 from menu.set_menu import set_user_menu, set_description
@@ -29,10 +29,10 @@ async def on_startup(bot: Bot) -> None:
     await set_user_menu(bot)
     await set_description(bot)
 
-    # logger.info('Вебхук установлен')
-    # await bot.set_webhook(url=f"{config.webhook.base_url}{config.webhook.path}",
-    #                       secret_token=config.webhook.secret,
-    #                       drop_pending_updates=True)
+    logger.info('Вебхук установлен')
+    await bot.set_webhook(url=f"{config.webhook.base_url}{config.webhook.path}",
+                          secret_token=config.webhook.secret,
+                          drop_pending_updates=True)
 
 
 async def on_shutdown(dispatcher: Dispatcher, bot: Bot):
@@ -42,7 +42,7 @@ async def on_shutdown(dispatcher: Dispatcher, bot: Bot):
 
 
 async def main():
-    # log_config.setup_logging()
+    log_config.setup_logging()
 
     storage = RedisStorage(
         redis=Redis(
@@ -78,30 +78,30 @@ async def main():
     dp.include_router(main_menu.main_menu_dialog)
     dp.include_router(order.router)
     dp.include_router(order.order_dialog)
-    dp.include_router(admin_menu.router)
-    dp.include_router(admin_menu.admin_dialog)
+    # dp.include_router(admin_menu.router)
+    # dp.include_router(admin_menu.admin_dialog)
     dp.include_router(group.router)
     setup_dialogs(dp)
 
     logger.info("Including middlewares...")
     dp.update.middleware(DataBaseMiddleware())
 
-    await dp.start_polling(bot)
-    # app = web.Application()
-    # webhook_requests_handler = SimpleRequestHandler(
-    #     dispatcher=dp,
-    #     bot=bot,
-    #     secret_token=config.webhook.secret
-    # )
-    # webhook_requests_handler.register(app, path=config.webhook.path)
-    # setup_application(app, dp, bot=bot)
-    # return app
+    # await dp.start_polling(bot)
+    app = web.Application()
+    webhook_requests_handler = SimpleRequestHandler(
+        dispatcher=dp,
+        bot=bot,
+        secret_token=config.webhook.secret
+    )
+    webhook_requests_handler.register(app, path=config.webhook.path)
+    setup_application(app, dp, bot=bot)
+    return app
 
 
 if __name__ == '__main__':
-    logging.basicConfig(
-        level=logging.getLevelName(level=config.log.level),
-        format=config.log.format
-    )
-    asyncio.run(main())
-    # web.run_app(main(), host=config.webhook.server, port=int(config.webhook.port))
+    # logging.basicConfig(
+    #     level=logging.getLevelName(level=config.log.level),
+    #     format=config.log.format
+    # )
+    # asyncio.run(main())
+    web.run_app(main(), host=config.webhook.server, port=int(config.webhook.port))
