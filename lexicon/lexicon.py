@@ -15,6 +15,7 @@ LEXICON_RU: dict[str, str | dict] = {
         'sugar': 'Сколько ложек сахара добавить?',
         'toppings': 'Какой сироп желаете?',
         'additional': 'Добавим что-нибудь еще?',
+        'wait_time': 'Через сколкьо Вас ждать?',
         'temperature': 'Сделать напиток погорячее?'
     }
 }
@@ -283,6 +284,11 @@ ORDER_DATA: dict[str, dict] = {
     'temperature': {
         'yes': 'Да',
         'no': ' Нет'
+    },
+    'wait_time': {
+        'short': '2-3 минуты',
+        'medium': '5 минут',
+        'long': ' 10 минут'
     }
 }
 

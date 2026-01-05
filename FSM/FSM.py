@@ -15,6 +15,7 @@ class OrderSG(StatesGroup):
     set_toppings = State()
     set_additional = State()
     set_temperature = State()
+    set_wait_time = State()
     set_finish = State()
 
 class AdminMenuSG(StatesGroup):

@@ -42,7 +42,7 @@ async def coffee_callback_click(callback: CallbackQuery, widget: Select, dialog_
         dialog_manager.dialog_data['toppings'] = 'nothing'
         dialog_manager.dialog_data['additional'] = 'nothing'
         dialog_manager.dialog_data['temperature'] = 'no'
-        await dialog_manager.switch_to(state=OrderSG.set_finish)
+        await dialog_manager.switch_to(state=OrderSG.set_wait_time)
 
     else:
         await dialog_manager.next()
@@ -90,7 +90,7 @@ async def sugar_callback_click(callback: CallbackQuery, widget: Select, dialog_m
         if dialog_manager.dialog_data.get('coffee') in ['ice_latte', 'ice_matcha']:
             dialog_manager.dialog_data['additional'] = 'nothing'
             dialog_manager.dialog_data['temperature'] = 'no'
-            await dialog_manager.switch_to(state=OrderSG.set_finish)
+            await dialog_manager.switch_to(state=OrderSG.set_wait_time)
         else:
             await dialog_manager.switch_to(state=OrderSG.set_additional)
     else:
@@ -103,7 +103,7 @@ async def toppings_callback_click(callback: CallbackQuery, widget: Select, dialo
     if dialog_manager.dialog_data.get('coffee') in ['ice_latte', 'ice_matcha']:
         dialog_manager.dialog_data['additional'] = 'nothing'
         dialog_manager.dialog_data['temperature'] = 'no'
-        await dialog_manager.switch_to(state=OrderSG.set_finish)
+        await dialog_manager.switch_to(state=OrderSG.set_wait_time)
     else:
         await dialog_manager.next()
 
@@ -113,13 +113,18 @@ async def additional_callback_click(callback: CallbackQuery, widget: Select, dia
 
     if dialog_manager.dialog_data.get('coffee') in ['ice_americano', 'raf_caramel_popcorn', 'raf_chocolate']:
         dialog_manager.dialog_data['temperature'] = 'no'
-        await dialog_manager.switch_to(state=OrderSG.set_finish)
+        await dialog_manager.switch_to(state=OrderSG.set_wait_time)
     else:
         await dialog_manager.next()
 
 
 async def temperature_callback_click(callback: CallbackQuery, widget: Select, dialog_manager: DialogManager, item_id: Any):
     dialog_manager.dialog_data['temperature'] = item_id
+    await dialog_manager.next()
+
+
+async def wait_time_callback_click(callback: CallbackQuery, widget: Select, dialog_manager: DialogManager, item_id: Any):
+    dialog_manager.dialog_data['wait_time'] = item_id
     await dialog_manager.next()
 
 
@@ -174,6 +179,7 @@ async def send_order_to_group(bot: Bot, order_id: int, order_info: dict) -> None
            f'Топпинг: {ORDER_DATA["toppings"].get(order_info.get("toppings"))}\n'\
            f'Добавка: {ORDER_DATA["additional"].get(order_info.get("additional"))}\n'\
            f'Горячий кофе: {ORDER_DATA["temperature"].get(order_info.get("temperature"))}\n'\
+           f'Ожидание: {ORDER_DATA["wait_time"].get(order_info.get("wait_time"))}\n'\
            f'Цена: {order_info.get("price")}\n'
     
     
@@ -236,6 +242,22 @@ async def special_back_button_click(callback: CallbackQuery, button: Button, dia
         await dialog_manager.back()
 
 
+async def back_wait_time(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+    context = dialog_manager.current_context()
+
+    if dialog_manager.dialog_data['coffee'] in ['espresso_x2', 'bamble', 'espresso_tonic']:
+        await dialog_manager.switch_to(state=OrderSG.set_category)
+
+    elif dialog_manager.dialog_data.get('coffee') in ['ice_latte', 'ice_matcha']:
+        await dialog_manager.switch_to(state=OrderSG.set_coffee_base)
+
+    elif dialog_manager.dialog_data.get('coffee') in ['ice_americano', 'raf_caramel_popcorn', 'raf_chocolate']:
+        await dialog_manager.switch_to(state=OrderSG.set_additional)
+
+    else:
+        await dialog_manager.back()
+
+
 async def get_volume_menu(aiogd_context: Context,**kwargs):
     data = aiogd_context.dialog_data
 
@@ -282,6 +304,11 @@ async def get_additional_menu(dialog_manager: DialogManager, **kwargs):
 async def get_temperature_menu(dialog_manager: DialogManager, **kwargs):
     items = [(key, value) for key, value in ORDER_DATA.get("temperature").items()]
     return {"temperature": items}
+
+
+async def get_wait_time_menu(dialog_manager: DialogManager, **kwargs):
+    items = [(key, value) for key, value in ORDER_DATA.get("wait_time").items()]
+    return {"wait_time": items}
 
 
 order_dialog = Dialog(
@@ -417,9 +444,25 @@ order_dialog = Dialog(
                 on_click=temperature_callback_click
             ),
         ),
-        Button(text=Const(text='Назад'), id='additional_back', on_click=special_back_button_click),
+        Button(text=Const(text='Назад'), id='temperature_back', on_click=special_back_button_click),
         getter=get_temperature_menu,
         state=OrderSG.set_temperature
+    ),
+
+    Window(
+        Const(text=LEXICON_RU['inline_kb_text']['wait_time']),
+        Group(
+            Select(
+                Format('{item[1]}'),
+                id='wait',
+                item_id_getter=lambda x: x[0],
+                items='wait_time',
+                on_click=wait_time_callback_click
+            ),
+        ),
+        Button(text=Const(text='Назад'), id='wait_time_back', on_click=back_wait_time),
+        getter=get_wait_time_menu,
+        state=OrderSG.set_wait_time
     ),
 
     Window(
