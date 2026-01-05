@@ -459,6 +459,7 @@ order_dialog = Dialog(
                 items='wait_time',
                 on_click=wait_time_callback_click
             ),
+            width=1
         ),
         Button(text=Const(text='Назад'), id='wait_time_back', on_click=back_wait_time),
         getter=get_wait_time_menu,
