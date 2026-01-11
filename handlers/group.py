@@ -25,7 +25,7 @@ async def took_order(callback: CallbackQuery, bot: Bot, conn: AsyncConnection):
 
     await callback.answer()
     await callback.message.edit_text(text=callback.message.text, reply_markup=group_keyboard)
-    await bot.send_message(chat_id=user_id, text='Заказ взять в работу')
+    await bot.send_message(chat_id=user_id, text='Заказ взят в работу')
 
 
 @router.callback_query(F.data.split(':')[0] == 'ready')
