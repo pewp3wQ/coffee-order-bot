@@ -95,6 +95,13 @@ ORDER_DATA: dict[str, dict] = {
             "prices": { "250": 200, "350": 220, "450": 240 }
           },
 
+          "raf_classic": {
+            "name": "Раф классический",
+            "category": "cream",
+            "sizes": ["350", "450"],
+            "prices": { "350": 250, "450": 280 }
+          },
+
           "raf_vanilla": {
             "name": "Раф ваниль",
             "category": "cream",
@@ -149,6 +156,13 @@ ORDER_DATA: dict[str, dict] = {
             "category": "signature",
             "sizes": ["350", "450"],
             "prices": { "350": 240, "450": 260 }
+          },
+
+          "latte_sinnabon": {
+            "name": "Латте синнабон",
+            "category": "signature",
+            "sizes": ["350", "450"],
+            "prices": { "350": 330, "450": 380 }
           },
 
           "raf_caramel_popcorn": {
@@ -213,6 +227,7 @@ ORDER_DATA: dict[str, dict] = {
           "matcha_latte": "Матча латте"
         },
         "cream": {
+          "raf_classic": "Раф классический",
           "raf_vanilla": "Раф ваниль",
           "raf_nut": "Раф орех",
           "raf_coconut": "Раф кокос"
@@ -222,6 +237,7 @@ ORDER_DATA: dict[str, dict] = {
           "latte_peanut": "Латте арахис",
           "latte_spicy_maple": "Латте пряный с клёном",
           "latte_salted_caramel": "Латте солёная карамель",
+          "latte_sinnabon": "Латте синнабон",
           "raf_caramel_popcorn": "Раф карамельный попкорн",
           "raf_chocolate": "Раф шоколад"
         },
@@ -275,6 +291,7 @@ ORDER_DATA: dict[str, dict] = {
         'extra_espresso': 'Эспрессо',
         'marshmallow': 'Маршмеллоу',
         'milk': 'Молоко 3.2 % (20 мл.)',
+        'cream': 'Сливки 10%',
         'oat_milk': 'Овсяное молоко (20 мл.)',
         'coconut_milk': 'Кокосовое молоко (20 мл.)',
         'almond_milk': 'Миндальное молоко (20 мл.)'

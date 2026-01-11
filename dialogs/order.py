@@ -9,6 +9,7 @@ from aiogram_dialog.api.entities import Context
 from aiogram_dialog.widgets.text import Const, Format
 from aiogram_dialog.widgets.kbd import Button, Column, ScrollingGroup, Select, Group
 
+from config.config import load_config, Config
 from lexicon.lexicon import LEXICON_RU, ORDER_DATA
 from FSM.FSM import OrderSG
 from database.db import (
@@ -16,8 +17,8 @@ from database.db import (
     get_price
 )
 
+config: Config = load_config()
 router = Router()
-
 logger = logging.getLogger(__name__)
 
 
@@ -98,13 +99,7 @@ async def sugar_callback_click(callback: CallbackQuery, widget: Select, dialog_m
 
     if dialog_manager.dialog_data['sugar'] != 'nothing':
         dialog_manager.dialog_data['toppings'] = 'nothing'
-
-        if dialog_manager.dialog_data.get('coffee') in ['ice_latte', 'ice_matcha']:
-            dialog_manager.dialog_data['additional'] = 'nothing'
-            dialog_manager.dialog_data['temperature'] = 'no'
-            await dialog_manager.switch_to(state=OrderSG.set_wait_time)
-        else:
-            await dialog_manager.switch_to(state=OrderSG.set_additional)
+        await dialog_manager.switch_to(state=OrderSG.set_additional)
     else:
         await dialog_manager.next()
 
@@ -195,13 +190,13 @@ async def send_order_to_group(bot: Bot, order_id: int, order_info: dict) -> None
            f'Цена: {order_info.get("price")}\n'
     
     if order_info.get("location") == "ordzhonikidze":
-        await bot.send_message(chat_id=-1003654596931,
+        await bot.send_message(chat_id=config.group.group_id,
                            text=text,
                            reply_markup=group_keyboard,
                            message_thread_id=4
         )
     elif order_info.get("location") == "microdistrict":
-        await bot.send_message(chat_id=-1003654596931,
+        await bot.send_message(chat_id=config.group.group_id,
                            text=text,
                            reply_markup=group_keyboard,
                            message_thread_id=18)
