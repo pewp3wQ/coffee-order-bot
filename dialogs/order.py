@@ -81,7 +81,7 @@ async def volume_callback_click(callback: CallbackQuery, widget: Select, dialog_
 async def base_callback_click(callback: CallbackQuery, widget: Select, dialog_manager: DialogManager, item_id: Any):
     dialog_manager.dialog_data['coffee_base'] = item_id
 
-    if dialog_manager.dialog_data.get('coffee') in ['latte_nut', 'latte_peanut', 'latte_spicy_maple', 'latte_salted_caramel']:
+    if dialog_manager.dialog_data.get('coffee') in ['latte_nut', 'latte_peanut', 'latte_spicy_maple', 'latte_salted_caramel', 'latte_sinnabon']:
         dialog_manager.dialog_data['sugar'] = 'nothing'
         dialog_manager.dialog_data['toppings'] = 'nothing'
         await dialog_manager.switch_to(state=OrderSG.set_additional)
