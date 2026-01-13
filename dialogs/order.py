@@ -251,6 +251,9 @@ async def special_back_button_click(callback: CallbackQuery, button: Button, dia
     elif dialog_manager.dialog_data['coffee'] in ['ice_latte', 'ice_matcha'] and context.state == OrderSG.set_toppings:
         await dialog_manager.switch_to(state=OrderSG.set_coffee_base)
 
+    elif dialog_manager.dialog_data['coffee'] in ['latte_sinnabon'] and context.state == OrderSG.set_temperature:
+        await dialog_manager.switch_to(state=OrderSG.set_coffee_base)
+
     elif dialog_manager.dialog_data['coffee'] == 'ice_americano':
         if context.state == OrderSG.set_toppings:
             await dialog_manager.switch_to(state=OrderSG.set_volume)
