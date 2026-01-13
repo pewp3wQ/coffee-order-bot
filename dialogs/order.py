@@ -242,7 +242,7 @@ async def special_back_button_click(callback: CallbackQuery, button: Button, dia
     if dialog_manager.dialog_data['coffee'] in ['latte_nut', 'latte_peanut', 'latte_spicy_maple', 'latte_salted_caramel'] and context.state == OrderSG.set_additional:
         await dialog_manager.switch_to(state=OrderSG.set_coffee_base)
 
-    elif dialog_manager.dialog_data['coffee'] in ['americano', 'kakao'] and (context.state == OrderSG.set_sugar or context.state == OrderSG.set_additional):
+    elif dialog_manager.dialog_data['coffee'] in ['americano', 'kakao', 'raf_classic'] and (context.state == OrderSG.set_sugar or context.state == OrderSG.set_additional):
         await dialog_manager.switch_to(state=OrderSG.set_volume)
 
     elif dialog_manager.dialog_data['category'] in ['cream', 'signature'] and context.state == OrderSG.set_additional:
