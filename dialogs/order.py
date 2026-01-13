@@ -61,6 +61,10 @@ async def volume_callback_click(callback: CallbackQuery, widget: Select, dialog_
         dialog_manager.dialog_data['sugar'] = 'nothing'
         await dialog_manager.switch_to(state=OrderSG.set_toppings)
 
+    elif dialog_manager.dialog_data.get('coffee') in ['raf_classic']:
+        dialog_manager.dialog_data['coffee_base'] = 'nothing'
+        await dialog_manager.switch_to(state=OrderSG.set_sugar)
+
     elif dialog_manager.dialog_data.get('coffee') in ['kakao'] or dialog_manager.dialog_data.get('category') == 'cream':
         dialog_manager.dialog_data['coffee_base'] = 'nothing'
         dialog_manager.dialog_data['sugar'] = 'nothing'
@@ -81,10 +85,16 @@ async def volume_callback_click(callback: CallbackQuery, widget: Select, dialog_
 async def base_callback_click(callback: CallbackQuery, widget: Select, dialog_manager: DialogManager, item_id: Any):
     dialog_manager.dialog_data['coffee_base'] = item_id
 
-    if dialog_manager.dialog_data.get('coffee') in ['latte_nut', 'latte_peanut', 'latte_spicy_maple', 'latte_salted_caramel', 'latte_sinnabon']:
+    if dialog_manager.dialog_data.get('coffee') in ['latte_nut', 'latte_peanut', 'latte_spicy_maple', 'latte_salted_caramel']:
         dialog_manager.dialog_data['sugar'] = 'nothing'
         dialog_manager.dialog_data['toppings'] = 'nothing'
         await dialog_manager.switch_to(state=OrderSG.set_additional)
+
+    elif dialog_manager.dialog_data.get('coffee') in ['latte_sinnabon']:
+        dialog_manager.dialog_data['sugar'] = 'nothing'
+        dialog_manager.dialog_data['toppings'] = 'nothing'
+        dialog_manager.dialog_data['additional'] = 'nothing'
+        await dialog_manager.switch_to(state=OrderSG.set_temperature)
 
     elif dialog_manager.dialog_data.get('coffee') in ['ice_latte', 'ice_matcha']:
         dialog_manager.dialog_data['sugar'] = 'nothing'
@@ -97,7 +107,11 @@ async def base_callback_click(callback: CallbackQuery, widget: Select, dialog_ma
 async def sugar_callback_click(callback: CallbackQuery, widget: Select, dialog_manager: DialogManager, item_id: Any):
     dialog_manager.dialog_data['sugar'] = item_id
 
-    if dialog_manager.dialog_data['sugar'] != 'nothing':
+    if dialog_manager.dialog_data['coffee'] in ['raf_classic'] and dialog_manager.dialog_data['sugar'] == 'nothing':
+        dialog_manager.dialog_data['toppings'] = 'nothing'
+        await dialog_manager.switch_to(state=OrderSG.set_additional)
+
+    elif dialog_manager.dialog_data['sugar'] != 'nothing':
         dialog_manager.dialog_data['toppings'] = 'nothing'
         await dialog_manager.switch_to(state=OrderSG.set_additional)
     else:
@@ -107,7 +121,7 @@ async def sugar_callback_click(callback: CallbackQuery, widget: Select, dialog_m
 async def toppings_callback_click(callback: CallbackQuery, widget: Select, dialog_manager: DialogManager, item_id: Any):
     dialog_manager.dialog_data['toppings'] = item_id
 
-    if dialog_manager.dialog_data.get('coffee') in ['ice_americano', 'ice_latte', 'ice_matcha']:
+    if dialog_manager.dialog_data.get('coffee') in ['ice_latte', 'ice_matcha']:
         dialog_manager.dialog_data['additional'] = 'nothing'
         dialog_manager.dialog_data['temperature'] = 'no'
         await dialog_manager.switch_to(state=OrderSG.set_wait_time)
@@ -309,9 +323,9 @@ async def get_toppings_menu(dialog_manager: DialogManager, **kwargs):
 async def get_additional_menu(dialog_manager: DialogManager, **kwargs):
     items = [(key, value) for key, value in ORDER_DATA.get("additional").items()]
 
-    if dialog_manager.dialog_data['coffee'] == 'americano':
+    if dialog_manager.dialog_data['coffee'] in ['americano', 'ice_americano']:
         items.pop(2)
-    elif dialog_manager.dialog_data['coffee'] in ['cappuccino', 'flat_white', 'latte', 'ice_americano'] or dialog_manager.dialog_data['category'] == 'signature':
+    elif dialog_manager.dialog_data['coffee'] in ['cappuccino', 'flat_white', 'latte'] or dialog_manager.dialog_data['category'] == 'signature':
         items = items[0:3]
     elif dialog_manager.dialog_data['coffee'] in ['kakao', 'matcha_latte'] or dialog_manager.dialog_data['category'] in ['cream']:
         items.pop(1)

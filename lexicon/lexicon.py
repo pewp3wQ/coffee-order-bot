@@ -18,6 +18,11 @@ LEXICON_RU: dict[str, str | dict] = {
     }
 }
 
+
+GROUP_BUTTONS: dict[str, str] = {
+    'queue': 'Взялся за заказ',
+    'ready': 'Заказ готов'
+}
 ORDER_DATA: dict[str, dict] = {
     'category': {
         'classic': 'Классика',
@@ -294,7 +299,8 @@ ORDER_DATA: dict[str, dict] = {
         'cream': 'Сливки 10%',
         'oat_milk': 'Овсяное молоко (20 мл.)',
         'coconut_milk': 'Кокосовое молоко (20 мл.)',
-        'almond_milk': 'Миндальное молоко (20 мл.)'
+        'almond_milk': 'Миндальное молоко (20 мл.)',
+        'cinnamon': 'Корица'
     },
     'temperature': {
         'yes': 'Да',
@@ -305,11 +311,6 @@ ORDER_DATA: dict[str, dict] = {
         'medium': '5 минут',
         'long': ' 10 минут'
     }
-}
-
-GROUP_BUTTONS: dict[str, str] = {
-    'queue': 'Взялся за заказ',
-    'ready': 'Заказ готов'
 }
 
 ADMIN_MENU: dict[str, dict] = {

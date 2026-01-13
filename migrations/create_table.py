@@ -130,7 +130,8 @@ async def main():
                         ["cream", "additional", "", 20],
                         ["oat_milk", "additional", "", 30],
                         ["coconut_milk", "additional", "", 30],
-                        ["almond_milk", "additional", "", 30]
+                        ["almond_milk", "additional", "", 30],
+                        ["cinnamon", "additional", "", 30]
                     ]
                     for data_list in coffee_data:
                         await cursor.execute(
