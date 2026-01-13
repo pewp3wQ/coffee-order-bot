@@ -393,7 +393,7 @@ order_dialog = Dialog(
                 on_click=volume_callback_click
             )
         ),
-        Button(text=Const('Назад'), id='volume_back', on_click=special_back_button_click),
+        Button(text=Const('Назад'), id='volume_back', on_click=back_button_click),
         getter=get_volume_menu,
         state=OrderSG.set_volume
     ),
