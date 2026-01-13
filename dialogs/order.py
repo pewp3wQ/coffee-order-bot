@@ -325,9 +325,14 @@ async def get_additional_menu(dialog_manager: DialogManager, **kwargs):
 
     if dialog_manager.dialog_data['coffee'] in ['americano', 'ice_americano']:
         items.pop(2)
-    elif dialog_manager.dialog_data['coffee'] in ['cappuccino', 'flat_white', 'latte'] or dialog_manager.dialog_data['category'] == 'signature':
+    elif dialog_manager.dialog_data['coffee'] in ['latte_sinnabon', 'latte_spicy_maple']:
         items = items[0:3]
-    elif dialog_manager.dialog_data['coffee'] in ['kakao', 'matcha_latte'] or dialog_manager.dialog_data['category'] in ['cream']:
+    elif dialog_manager.dialog_data['coffee'] in ['cappuccino', 'flat_white', 'latte'] or dialog_manager.dialog_data['category'] == 'signature':
+        items = items[0:4]
+    elif dialog_manager.dialog_data['coffee'] in ['kakao']:
+        items.pop(1)
+        items = items[0:2]
+    elif dialog_manager.dialog_data['coffee'] in ['matcha_latte'] or dialog_manager.dialog_data['category'] in ['cream']:
         items.pop(1)
         items = items[0:3]
 
