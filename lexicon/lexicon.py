@@ -295,12 +295,12 @@ ORDER_DATA: dict[str, dict] = {
         'nothing': 'Без доп. добавок',
         'extra_espresso': 'Эспрессо',
         'marshmallow': 'Маршмеллоу',
+        'cinnamon': 'Корица',
         'milk': 'Молоко 3.2 % (20 мл.)',
         'cream': 'Сливки 10%',
         'oat_milk': 'Овсяное молоко (20 мл.)',
         'coconut_milk': 'Кокосовое молоко (20 мл.)',
-        'almond_milk': 'Миндальное молоко (20 мл.)',
-        'cinnamon': 'Корица'
+        'almond_milk': 'Миндальное молоко (20 мл.)'
     },
     'temperature': {
         'yes': 'Да',

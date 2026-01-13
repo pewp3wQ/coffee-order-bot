@@ -329,7 +329,7 @@ async def get_additional_menu(dialog_manager: DialogManager, **kwargs):
         items = items[0:3]
     elif dialog_manager.dialog_data['coffee'] in ['kakao', 'matcha_latte'] or dialog_manager.dialog_data['category'] in ['cream']:
         items.pop(1)
-        items = items[0:2]
+        items = items[0:3]
 
     return {"additional": items}
 
