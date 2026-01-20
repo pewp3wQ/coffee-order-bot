@@ -1,6 +1,7 @@
 import logging
 
 from aiogram import Router, F, Bot
+from aiogram.exceptions import TelegramForbiddenError
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 from psycopg.connection_async import AsyncConnection
 
@@ -22,10 +23,16 @@ async def took_order(callback: CallbackQuery, bot: Bot, conn: AsyncConnection):
             [InlineKeyboardButton(text='Заказ готов', callback_data=f'ready:{order_id}')]
         ]
     )
-
-    await callback.answer()
-    await callback.message.edit_text(text=callback.message.text, reply_markup=group_keyboard)
-    await bot.send_message(chat_id=user_id, text='Заказ взят в работу')
+    try:
+        await callback.answer()
+        await bot.send_message(chat_id=user_id, text='Заказ взят в работу')
+        await callback.message.edit_text(text=callback.message.text, reply_markup=group_keyboard)
+    except TelegramForbiddenError as e:
+        await callback.answer(f'Пользователь {user_id} заблокировал бота', show_alert=True)
+        logger.error(f'Пользователь {user_id} заблокировал бота {e}')
+    except Exception as e:
+        logger.error(f'Произошла ошибка: {e}')
+        await callback.answer('Произошла непредвиденная ошибка')
 
 
 @router.callback_query(F.data.split(':')[0] == 'ready')
@@ -34,13 +41,18 @@ async def took_order(callback: CallbackQuery, bot: Bot, conn: AsyncConnection):
 
     order_id = callback.data.split(':')[1]
     user_id = await get_user_from_order(conn, order_id=int(order_id))
-
-    await bot.send_message(chat_id=user_id, text='Заказ готов')
-    await callback.answer()
-
     keyboard = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Заказ выполнен", callback_data="finish")]])
 
-    await callback.message.edit_text(text=callback.message.text, reply_markup=keyboard)
+    try:
+        await callback.answer()
+        await bot.send_message(chat_id=user_id, text='Заказ готов')
+        await callback.message.edit_text(text=callback.message.text, reply_markup=keyboard)
+    except TelegramForbiddenError as e:
+        await callback.answer(f'Пользователь {user_id} заблокировал бота', show_alert=True)
+        logger.error(f'Пользователь {user_id} заблокировал бота {e}')
+    except Exception as e:
+        logger.error(f'Произошла ошибка: {e}')
+        await callback.answer('Произошла непредвиденная ошибка')
 
 
 @router.callback_query(F.data == 'finish', F.message.chat.id == config.group.group_id)

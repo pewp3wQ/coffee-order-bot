@@ -3,6 +3,7 @@ from typing import Any
 from psycopg.connection_async import AsyncConnection
 
 from aiogram import Bot, Router
+from aiogram.exceptions import TelegramForbiddenError
 from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram_dialog import Dialog, DialogManager, Window
 from aiogram_dialog.api.entities import Context
@@ -204,13 +205,13 @@ async def send_order_to_group(bot: Bot, order_id: int, order_info: dict) -> None
            f'Цена: {order_info.get("price")}\n'
     
     if order_info.get("location") == "ordzhonikidze":
-        await bot.send_message(chat_id=config.group.group_id,
+        await bot.send_message(chat_id=-1003293541701,
                            text=text,
                            reply_markup=group_keyboard,
-                           message_thread_id=4
+                           message_thread_id=3
         )
     elif order_info.get("location") == "microdistrict":
-        await bot.send_message(chat_id=config.group.group_id,
+        await bot.send_message(chat_id=-1003293541701,
                            text=text,
                            reply_markup=group_keyboard,
                            message_thread_id=18)
@@ -525,4 +526,7 @@ order_dialog = Dialog(
 
 @router.message()
 async def delete_input_messages(message: Message, bot: Bot):
-    await bot.delete_message(chat_id=message.from_user.id, message_id=message.message_id)
+    try:
+        await bot.delete_message(chat_id=message.from_user.id, message_id=message.message_id)
+    except TelegramBadRequest as e:
+        logger.info(f'Пользователь {message.from_user.id} -- {message.from_user.username} вводит сообщение в чат {e}')
