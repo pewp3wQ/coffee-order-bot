@@ -71,7 +71,7 @@ async def command_start_process(message: Message, dialog_manager: DialogManager)
     if is_allowed:
         await dialog_manager.start(state=StartSG.start, mode=StartMode.RESET_STACK)
     else:
-        await message.answer('Я принимаю заказы с 7-20 до 20-00')
+        await message.answer('Я принимаю заказы с 7-45 до 20-00')
 
 
 

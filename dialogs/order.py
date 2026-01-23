@@ -195,7 +195,7 @@ async def send_order_to_group(bot: Bot, order_id: int, order_info: dict) -> None
            f'Локация: {ORDER_DATA["location"][order_info.get("location")]}\n' \
            f'Напиток: {ORDER_DATA["coffee"][order_info.get("category")].get(order_info.get("coffee"))}\n' \
            f'Объем: {ORDER_DATA["volume"].get(order_info.get("volume"))}\n'\
-           f'Мололо: {ORDER_DATA["coffee_base"].get(order_info.get("coffee_base"), "Без молока")}\n'\
+           f'Молоко: {ORDER_DATA["coffee_base"].get(order_info.get("coffee_base"), "Без молока")}\n'\
            f'Сахар: {ORDER_DATA["sugar"].get(order_info.get("sugar"))}\n'\
            f'Сироп: {ORDER_DATA["toppings"].get(order_info.get("toppings"))}\n'\
            f'Добавка: {ORDER_DATA["additional"].get(order_info.get("additional"))}\n'\
