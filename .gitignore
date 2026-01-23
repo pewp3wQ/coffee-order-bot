@@ -8,3 +8,4 @@ venv/
 __pycache__/
 test.py
 *.pycp
+logs_file/
