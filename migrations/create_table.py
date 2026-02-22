@@ -49,6 +49,7 @@ async def main():
                             CREATE TABLE IF NOT EXISTS orders(
                                 id SERIAL PRIMARY KEY,
                                 user_id BIGINT REFERENCES users(user_id),
+                                username TEXT,
                                 status TEXT NOT NULL DEFAULT 'draft',
                                 created_at TIMESTAMP DEFAULT NOW(),
                                 location TEXT,
@@ -59,7 +60,10 @@ async def main():
                                 sugar TEXT,
                                 toppings TEXT,
                                 additional TEXT,
+                                temperature TEXT,
+                                wait_time TEXT,
                                 price INTEGER,
+                                pending_at TIMESTAMP,
                                 confirmed_at TIMESTAMP
                             );
                         """
@@ -72,6 +76,18 @@ async def main():
                                 category TEXT NOT NULL,
                                 volume TEXT,
                                 price INTEGER
+                            );
+                        """
+                    )
+
+                    await cursor.execute(
+                        query="""
+                            CREATE TABLE IF NOT EXISTS payments (
+                                id SERIAL PRIMARY KEY,
+                                user_id BIGINT REFERENCES users(user_id),
+                                payment_id TEXT NOT NULL,
+                                order_id INTEGER NOT NULL,
+                                price DECIMAL
                             );
                         """
                     )
@@ -151,7 +167,7 @@ async def main():
                                 "price": data_list[3]
                             },
                         ),
-                logger.info("Tables `users`, `orders`, `prices`, all prices is loaded were successfully created")
+                logger.info("Tables `users`, `orders`, `prices`, `payments` all prices is loaded were successfully created")
     except Error as db_error:
         logger.exception("Database-specific error: %s", db_error)
     except Exception as e:

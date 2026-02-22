@@ -51,6 +51,13 @@ class WebhookSettings:
 
 
 @dataclass
+class PaymentWebhook:
+    path: str
+    account_id: int
+    secret_key: str
+
+
+@dataclass
 class Config:
     bot: TgBot
     log: LogSettings
@@ -58,6 +65,7 @@ class Config:
     db: DatabaseSettings
     redis: RedisSettings
     webhook: WebhookSettings
+    payment_webhook: PaymentWebhook
 
 
 
@@ -110,6 +118,12 @@ def load_config(path: str | None = None) -> Config:
         port=env('WEB_SERVER_PORT')
     )
 
+    payments_webhook = PaymentWebhook(
+        path=env('PAYMENTS_WEBHOOK_PATH'),
+        account_id=env('PAYMENTS_ACCOUNT_ID'),
+        secret_key=env('PAYMENTS_SECRET_KEY'),
+    )
+
     logger.info("Configuration loaded successfully")
 
     return Config(
@@ -118,5 +132,6 @@ def load_config(path: str | None = None) -> Config:
         redis=redis,
         log=logg_settings,
         group=group_data,
-        webhook=webhook
+        webhook=webhook,
+        payment_webhook=payments_webhook
     )

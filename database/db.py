@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timezone
+from decimal import Decimal
 from typing import Any
 
 from psycopg import AsyncConnection
@@ -101,26 +102,29 @@ async def get_order_id(
         conn: AsyncConnection,
         *,
         user_id: int,
+        username: str,
 ) -> int | None:
     async with conn.cursor() as cursor:
         order_id = await cursor.execute(
             query="""
-                INSERT INTO orders (user_id, status)
+                INSERT INTO orders (user_id, username, status)
                 VALUES (
                     %(user_id)s, 
+                    %(username)s, 
                     'draft'
                 )
                 RETURNING id;
             """,
             params={
-                "user_id": user_id
+                "user_id": user_id,
+                "username": username
             },
         )
         row = await order_id.fetchone()
         return row[0] if row else None
 
 
-async def update_user_order(
+async def update_pending_order(
         conn: AsyncConnection,
         *,
         order_id: int,
@@ -132,6 +136,8 @@ async def update_user_order(
         sugar: str,
         toppings: str,
         additional: str,
+        temperature: str,
+        wait_time: str,
         price: int,
         ) -> None:
     async with conn.cursor() as cursor:
@@ -146,9 +152,11 @@ async def update_user_order(
                     sugar = %s,
                     toppings = %s,
                     additional = %s,
+                    temperature = %s,
+                    wait_time = %s,
                     price = %s,
-                    status = 'confirmed',
-                    confirmed_at = NOW()
+                    status = 'pending',
+                    pending_at = NOW()
                 WHERE id = %s;
             """,
             params=(location,
@@ -159,30 +167,92 @@ async def update_user_order(
                     sugar,
                     toppings,
                     additional,
+                    temperature,
+                    wait_time,
                     price,
                     order_id)
         )
-    logger.info("Данные по заказу -- %d -- обновлены", order_id)
+    logger.info("Заказ -- %d сформирован и отрправлен для подтверждения оплаты", order_id)
 
 
-async def get_user_from_order(
+async def confirmed_order(
+        conn: AsyncConnection,
+        *,
+        order_id: int
+        ) -> None:
+    async with conn.cursor() as cursor:
+        await cursor.execute(
+            query="""
+                UPDATE orders
+                SET status = 'paid',
+                    confirmed_at = NOW()
+                WHERE id = %s;
+            """,
+            params=(order_id,)
+        )
+    logger.info("Оплата по заказу -- %d -- подтверждена", order_id)
+
+
+async def get_user_order(
         conn: AsyncConnection,
         *,
         order_id: int,
-) -> int | None:
+) -> tuple | None:
     async with conn.cursor() as cursor:
         user_id_from_order = await cursor.execute(
             query="""
-                SELECT user_id FROM orders WHERE id = %s;
+                SELECT 
+                    user_id, 
+                    username, 
+                    location, 
+                    category, 
+                    coffee, 
+                    volume, 
+                    coffee_base, 
+                    sugar, 
+                    toppings, 
+                    additional,
+                    temperature,
+                    wait_time,
+                    price 
+                FROM orders 
+                WHERE id = %s;
             """,
             params=(order_id,),
         )
-        row = await user_id_from_order.fetchone()
+        row = await user_id_from_order.fetchall()
     if row:
         logger.info("User ID from order has in db %s", row[0])
     else:
         logger.warning("No user with %s", order_id)
-    return row[0] if row else None
+    return row if row else None
+
+async def add_payments(
+        conn: AsyncConnection,
+        *,
+        user_id: int,
+        payment_id: str,
+        order_id: int,
+        price: Decimal
+) -> None:
+    async with conn.cursor() as cursor:
+        await cursor.execute(
+            query="""
+                INSERT INTO payments (user_id, payment_id, order_id, price)
+                VALUES (
+                    %(user_id)s,
+                    %(payment_id)s,
+                    %(order_id)s,
+                    %(price)s
+                );
+            """,
+            params={
+                "user_id": user_id,
+                "payment_id": payment_id,
+                "order_id": order_id,
+                "price": price,
+            }
+        )
 
 
 async def add_price(

@@ -8,15 +8,17 @@ from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup, InlineKe
 from aiogram_dialog import Dialog, DialogManager, Window
 from aiogram_dialog.api.entities import Context
 from aiogram_dialog.widgets.text import Const, Format
-from aiogram_dialog.widgets.kbd import Button, Column, ScrollingGroup, Select, Group
+from aiogram_dialog.widgets.kbd import Button, Column, ScrollingGroup, Select, Group, Url
 
-from config.config import load_config, Config
-from lexicon.lexicon import LEXICON_RU, ORDER_DATA
-from FSM.FSM import OrderSG
 from database.db import (
-    update_user_order,
+    update_pending_order,
     get_price
 )
+from config.config import load_config, Config
+from FSM.FSM import OrderSG
+from lexicon.lexicon import LEXICON_RU, ORDER_DATA
+from payments.yookassa_payment import create_payment_check
+
 
 config: Config = load_config()
 router = Router()
@@ -152,14 +154,17 @@ async def wait_time_callback_click(callback: CallbackQuery, widget: Select, dial
 
 async def get_order(dialog_manager: DialogManager, bot: Bot, **kwargs):
     order_info = dialog_manager.dialog_data
+    print(order_info)
     order_id = dialog_manager.start_data
     logger.info(f'Данные по заказу >>>> {order_id} >>>> {order_info}')
 
     order_price = await calculating_price(dialog_manager.middleware_data['conn'], order_info)
     order_info['price'] = order_price
 
-    await send_order_to_group(bot, order_id['order_id'], order_info)
-    await update_user_order(dialog_manager.middleware_data['conn'],
+    payment = await create_payment_check(dialog_manager.dialog_data['price'], order_id['order_id'])
+    print(payment.confirmation.confirmation_url)
+
+    await update_pending_order(dialog_manager.middleware_data['conn'],
                             order_id=order_id['order_id'],
                             location=order_info["location"],
                             category=order_info["category"],
@@ -169,6 +174,8 @@ async def get_order(dialog_manager: DialogManager, bot: Bot, **kwargs):
                             sugar=order_info["sugar"],
                             toppings=order_info["toppings"],
                             additional=order_info["additional"],
+                            temperature=order_info["temperature"],
+                            wait_time=order_info["wait_time"],
                             price=order_price
                             )
 
@@ -181,40 +188,9 @@ async def get_order(dialog_manager: DialogManager, bot: Bot, **kwargs):
         'toppings': ORDER_DATA['toppings'].get(order_info.get('toppings')),
         'additional': ORDER_DATA['additional'].get(order_info.get('additional')),
         'temperature': ORDER_DATA['temperature'].get(order_info.get('temperature')),
-        'price': order_info.get('price')
+        'price': order_info.get('price'),
+        'payment_url': payment.confirmation.confirmation_url
     }
-
-async def send_order_to_group(bot: Bot, order_id: int, order_info: dict) -> None:
-    group_keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text='Взял заказ', callback_data=f'queue:{order_id}')],
-            [InlineKeyboardButton(text='Заказ готов', callback_data=f'ready:{order_id}')]
-        ]
-    )
-
-    text = f'Номер заказа: {order_id}\n\n'\
-           f'Имя: {order_info["username"]}\n'\
-           f'Локация: {ORDER_DATA["location"][order_info.get("location")]}\n' \
-           f'Напиток: {ORDER_DATA["coffee"][order_info.get("category")].get(order_info.get("coffee"))}\n' \
-           f'Объем: {ORDER_DATA["volume"].get(order_info.get("volume"))}\n'\
-           f'Мололо: {ORDER_DATA["coffee_base"].get(order_info.get("coffee_base"), "Без молока")}\n'\
-           f'Сахар: {ORDER_DATA["sugar"].get(order_info.get("sugar"))}\n'\
-           f'Сироп: {ORDER_DATA["toppings"].get(order_info.get("toppings"))}\n'\
-           f'Добавка: {ORDER_DATA["additional"].get(order_info.get("additional"))}\n'\
-           f'Горячий кофе: {ORDER_DATA["temperature"].get(order_info.get("temperature"))}\n'\
-           f'Ожидание: {ORDER_DATA["wait_time"].get(order_info.get("wait_time"))}\n'\
-           f'Цена: {order_info.get("price")}\n'
-    
-    if order_info.get("location") == "ordzhonikidze":
-        await bot.send_message(chat_id=-1003293541701,
-                           text=text,
-                           reply_markup=group_keyboard,
-                           message_thread_id=3
-        )
-    elif order_info.get("location") == "microdistrict":
-        await bot.send_message(chat_id=-1003293541701,
-                           text=text,
-                           reply_markup=group_keyboard,
-                           message_thread_id=18)
 
 async def calculating_price(conn: AsyncConnection, order_info: dict) -> int:
     coffee_price = await get_price(conn, product_name=order_info['coffee'], category=order_info['category'], volume=order_info['volume'])
@@ -519,6 +495,8 @@ order_dialog = Dialog(
                     'Добавки - {additional}\n'
                     'Горячий кофе ? - {temperature}\n'
                     'Цена - {price} руб.'),
+        # Button(text=Format(text='Оплатить {price}'), id='pay_button', on_click=pay_proccess),
+        Url(text=Format(text='Оплатить {price}'), url=Format(text='{payment_url}')),
         getter=get_order,
         state=OrderSG.set_finish)
 )
@@ -528,5 +506,5 @@ order_dialog = Dialog(
 async def delete_input_messages(message: Message, bot: Bot):
     try:
         await bot.delete_message(chat_id=message.from_user.id, message_id=message.message_id)
-    except TelegramBadRequest as e:
+    except Exception as e:
         logger.info(f'Пользователь {message.from_user.id} -- {message.from_user.username} вводит сообщение в чат {e}')
