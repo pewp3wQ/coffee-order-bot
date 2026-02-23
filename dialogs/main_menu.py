@@ -21,6 +21,7 @@ config: Config = load_config()
 logger = logging.getLogger(__name__)
 router = Router()
 
+
 async def start_order_dialog(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
     logger.info(f'Пользователь: {callback.from_user.username} - ID: {callback.from_user.id} - начал свой заказ')
 
@@ -74,7 +75,12 @@ async def command_start_process(message: Message, dialog_manager: DialogManager)
         await message.answer('Я принимаю заказы с 7-45 до 20-00')
 
 
-
 @router.message()
 async def delete_input_messages(message: Message, bot: Bot):
-    await bot.delete_message(chat_id=message.from_user.id, message_id=message.message_id)
+    if message.chat.type == 'private':
+        await bot.delete_message(chat_id=message.from_user.id, message_id=message.message_id)
+    else:
+        try:
+            await bot.delete_message(chat_id=config.group.group_id, message_id=message.message_id)
+        except Exception as e:
+            logger.error(f'{message.message_id} -- {message.chat.id} -- {e}' )

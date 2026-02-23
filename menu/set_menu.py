@@ -16,6 +16,10 @@ async def set_user_menu(bot: Bot):
         scope=BotCommandScopeAllPrivateChats()
     )
 
+    await bot.set_my_commands([],
+        scope=BotCommandScopeAllGroupChats()
+    )
+
     logging.info(msg='Команды доблавены')
 
 

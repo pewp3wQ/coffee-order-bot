@@ -72,7 +72,7 @@ ORDER_DATA: dict[str, dict] = {
           },
 
           "flat_white": {
-            "name": "Флэт уайт",
+            "name": "Флет уайт",
             "category": "classic",
             "sizes": ["250"],
             "prices": { "250": 210 }
@@ -223,7 +223,7 @@ ORDER_DATA: dict[str, dict] = {
           "espresso_x2": "Эспрессо х2",
           "americano": "Американо",
           "cappuccino": "Капучино",
-          "flat_white": "Флэт уайт",
+          "flat_white": "Флет уайт",
           "latte": "Латте",
         },
         "mokka": {

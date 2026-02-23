@@ -74,19 +74,16 @@ async def main():
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
     logger.info('Router including')
+    dp.include_router(group.router)
     dp.include_router(main_menu.router)
     dp.include_router(main_menu.main_menu_dialog)
     dp.include_router(order.router)
     dp.include_router(order.order_dialog)
-    # dp.include_router(admin_menu.router)
-    # dp.include_router(admin_menu.admin_dialog)
-    dp.include_router(group.router)
     setup_dialogs(dp)
 
     logger.info("Including middlewares...")
     dp.update.middleware(DataBaseMiddleware())
 
-    # await dp.start_polling(bot)
     app = web.Application()
     webhook_requests_handler = SimpleRequestHandler(
         dispatcher=dp,
@@ -99,9 +96,4 @@ async def main():
 
 
 if __name__ == '__main__':
-    # logging.basicConfig(
-    #     level=logging.getLevelName(level=config.log.level),
-    #     format=config.log.format
-    # )
-    # asyncio.run(main())
     web.run_app(main(), host=config.webhook.server, port=int(config.webhook.port))

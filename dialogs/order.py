@@ -320,6 +320,10 @@ async def get_sugar_menu(**kwargs):
 
 async def get_toppings_menu(dialog_manager: DialogManager, **kwargs):
     items = [(key, value) for key, value in ORDER_DATA.get('toppings').items()]
+
+    if dialog_manager.dialog_data['coffee'] == 'latte':
+        items = [(key, value) for key, value in items if key != 'salted_caramel']
+
     return {'toppings': items}
 
 
@@ -327,17 +331,15 @@ async def get_additional_menu(dialog_manager: DialogManager, **kwargs):
     items = [(key, value) for key, value in ORDER_DATA.get("additional").items()]
 
     if dialog_manager.dialog_data['coffee'] in ['americano', 'ice_americano']:
-        items.pop(2)
+        items = [(key, value) for key, value in items if key != 'marshmallow']
     elif dialog_manager.dialog_data['coffee'] in ['latte_sinnabon', 'latte_spicy_maple']:
-        items = items[0:3]
+        items = [(key, value) for key, value in items if key in ['nothing', 'extra_espresso', 'marshmallow']]
     elif dialog_manager.dialog_data['coffee'] in ['cappuccino', 'flat_white', 'latte'] or dialog_manager.dialog_data['category'] == 'signature':
-        items = items[0:4]
+        items = [(key, value) for key, value in items if key in ['nothing', 'extra_espresso', 'marshmallow', 'cinnamon']]
     elif dialog_manager.dialog_data['coffee'] in ['kakao']:
-        items.pop(1)
-        items = items[0:2]
+        items = [(key, value) for key, value in items if key in ['nothing', 'marshmallow']]
     elif dialog_manager.dialog_data['coffee'] in ['matcha_latte'] or dialog_manager.dialog_data['category'] in ['cream']:
-        items.pop(1)
-        items = items[0:3]
+        items = [(key, value) for key, value in items if key in ['nothing', 'marshmallow', 'cinnamon']]
 
     return {"additional": items}
 
