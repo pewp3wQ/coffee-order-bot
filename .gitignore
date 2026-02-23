@@ -9,3 +9,4 @@ __pycache__/
 test.py
 *.pycp
 logs_file/
+main_dev.py
