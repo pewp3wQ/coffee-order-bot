@@ -64,7 +64,7 @@ async def command_start_process(message: Message, dialog_manager: DialogManager)
     dt_local = message.date.astimezone(tz_utc9)
 
     start = time(7, 45)
-    end = time(20, 00)
+    end = time(21, 00)
 
     is_allowed = start <= dt_local.time() <= end
     logger.info(f"Пользователь {message.from_user.username} -- {message.from_user.id} -- написал в {dt_local.time()}")
@@ -72,7 +72,7 @@ async def command_start_process(message: Message, dialog_manager: DialogManager)
     if is_allowed:
         await dialog_manager.start(state=StartSG.start, mode=StartMode.RESET_STACK)
     else:
-        await message.answer('Я принимаю заказы с 7-45 до 20-00')
+        await message.answer('Я принимаю заказы с 7-45 до 21-00')
 
 
 @router.message()
