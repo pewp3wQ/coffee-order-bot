@@ -16,15 +16,16 @@ from database.db import (
     update_user_order,
     get_price
 )
+from datetime import time, timezone, timedelta
 
 config: Config = load_config()
 router = Router()
 logger = logging.getLogger(__name__)
 
 
-async def location_callback_click(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+async def location_callback_click(callback: CallbackQuery, widget: Select, dialog_manager: DialogManager, item_id: Any):
     dialog_manager.dialog_data['username'] = callback.from_user.username if callback.from_user.username is not None else callback.from_user.first_name
-    dialog_manager.dialog_data['location'] = callback.data
+    dialog_manager.dialog_data['location'] = item_id
     await dialog_manager.next()
 
 
@@ -202,18 +203,18 @@ async def send_order_to_group(bot: Bot, order_id: int, order_info: dict) -> None
            f'Горячий кофе: {ORDER_DATA["temperature"].get(order_info.get("temperature"))}\n'\
            f'Ожидание: {ORDER_DATA["wait_time"].get(order_info.get("wait_time"))}\n'\
            f'Цена: {order_info.get("price")}\n'
-    
-    if order_info.get("location") == "ordzhonikidze":
-        await bot.send_message(chat_id=config.group.group_id,
-                           text=text,
-                           reply_markup=group_keyboard,
-                           message_thread_id=4
-        )
-    elif order_info.get("location") == "microdistrict":
-        await bot.send_message(chat_id=config.group.group_id,
-                           text=text,
-                           reply_markup=group_keyboard,
-                           message_thread_id=18)
+
+    thread_id = {
+        'ordzhonikidze': config.group.thread_id_ordzhonikidze,
+        'microdistrict': config.group.thread_id_microdistrict,
+        'lenina_10': config.group.thread_id_lenina_10,
+    }
+
+    await bot.send_message(chat_id=config.group.group_id,
+                       text=text,
+                       reply_markup=group_keyboard,
+                       message_thread_id=thread_id.get(order_info.get("location"))
+    )
 
 async def calculating_price(conn: AsyncConnection, order_info: dict) -> int:
     coffee_price = await get_price(conn, product_name=order_info['coffee'], category=order_info['category'], volume=order_info['volume'])
@@ -294,7 +295,38 @@ async def back_wait_time(callback: CallbackQuery, button: Button, dialog_manager
         await dialog_manager.back()
 
 
-async def get_volume_menu(aiogd_context: Context,**kwargs):
+async def get_location(dialog_manager: DialogManager, **kwargs):
+    event = dialog_manager.event
+
+    if isinstance(event, Message):
+        msg_date = event.date
+    elif isinstance(event, CallbackQuery) and event.message:
+        msg_date = event.message.date
+    else:
+        from datetime import datetime
+        msg_date = datetime.utcnow()
+
+    tz_utc9 = timezone(timedelta(hours=9))
+    dt_local = msg_date.astimezone(tz_utc9)
+
+    start = time(20, 00)
+    end = time(21, 00)
+
+    is_allowed = start <= dt_local.time() <= end
+    all_locations = ORDER_DATA['location']
+
+    if is_allowed:
+        filtered_locations = {
+            'lenina_10': all_locations.get('lenina_10')
+        }
+    else:
+        filtered_locations = all_locations
+
+    items = [(value, key) for key, value in filtered_locations.items()]
+    return {"locations": items}
+
+
+async def get_volume_menu(aiogd_context: Context, **kwargs):
     data = aiogd_context.dialog_data
 
     items = [(key, ORDER_DATA["volume"].get(key)) for key in ORDER_DATA["coffee_items"][data.get("coffee")]['sizes']]
@@ -357,8 +389,18 @@ async def get_wait_time_menu(dialog_manager: DialogManager, **kwargs):
 order_dialog = Dialog(
     Window(
         Const(text=LEXICON_RU['inline_kb_text']['location']),
-        Column(*[Button(text=Format(value), id=key, on_click=location_callback_click) for key, value in ORDER_DATA['location'].items()]),
-        state=OrderSG.set_location),
+        Column(
+            Select(
+                Format('{item[0]}'),
+                id="location",
+                item_id_getter=lambda item: item[1],
+                items="locations",
+                on_click=location_callback_click
+            )
+        ),
+        getter=get_location,
+        state=OrderSG.set_location
+    ),
 
     Window(
         Const(text=LEXICON_RU['inline_kb_text']['category']),
