@@ -32,7 +32,8 @@ ORDER_DATA: dict[str, dict] = {
     },
     'location': {
         'ordzhonikidze': 'Орджоникидзе, д. 17',
-        'microdistrict': '203 мкр. к. 30'
+        'microdistrict': '203 мкр. к. 30',
+        'lenina_10': 'Проспект Ленина, д. 10'
     },
     'volume': {
         '60': '60 мл',
