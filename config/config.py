@@ -21,7 +21,9 @@ class LogSettings:
 @dataclass
 class GroupData:
     group_id: int
-    thread_id: int
+    thread_id_lenina_10: int
+    thread_id_microdistrict: int
+    thread_id_ordzhonikidze: int
 
 
 @dataclass
@@ -99,7 +101,10 @@ def load_config(path: str | None = None) -> Config:
 
     group_data = GroupData(
         group_id=env('GROUP_ID'),
-        thread_id=env('THREAD_ID')
+        thread_id_lenina_10=env('THREAD_ID_LENINA_10'),
+        thread_id_microdistrict=env('THREAD_ID_MICRODISTRICT'),
+        thread_id_ordzhonikidze=env('THREAD_ID_ORDZHONIKIDZE'),
+
     )
 
     webhook = WebhookSettings(
